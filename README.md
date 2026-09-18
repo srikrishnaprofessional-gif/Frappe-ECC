@@ -7,27 +7,29 @@
 
 **Frappe ECC** is an open-source engineering system for AI code editors (**Antigravity**, **Claude Code**, **Cursor**, **Codex**, **Gemini CLI**) tailored specifically for developers building on the **Frappe Framework** and **ERPNext**.
 
+It covers the complete engineering lifecycle: **HLD/LLD Architecture**, **UI/UX & Wireframing**, **Interactive Clickable Prototyping**, **Turnkey Fullstack Development**, **Manual & Automated Testing (Playwright)**, **Security Auditing**, and **DevOps**.
+
 ---
 
 ## ⚡ Quick Install
 
 ### Antigravity (Recommended)
 ```bash
-./install.sh --profile minimal --target antigravity
+./install.sh --profile full --target antigravity
 ```
 *Or on Windows PowerShell:*
 ```powershell
-.\install.ps1 -Profile minimal -Target antigravity
+.\install.ps1 -Profile full -Target antigravity
 ```
 
 ### Claude Code
 ```bash
-./install.sh --profile minimal --target claude
+./install.sh --profile full --target claude
 ```
 
 ### Cursor
 ```bash
-./install.sh --profile minimal --target cursor
+./install.sh --profile full --target cursor
 ```
 
 ---
@@ -36,28 +38,38 @@
 
 | Component | Count | Description |
 |---|---|---|
-| **Agents** | 12 | Specialist AI workers: planning, backend controllers, desk UI, TDD, code review, security, DevOps, migrations, and reporting |
-| **Skills** | 14 | Production-grade workflows: DocType modeling, QueryBuilder, `hooks.py`, client scripts, REST APIs, permissions, TDD, background jobs |
-| **Commands** | 13 | Slash commands: `/frappe:plan`, `/frappe:doctype`, `/frappe:controller`, `/frappe:test`, `/frappe:security`, `/frappe:bench` |
+| **Agents** | 20 | Specialist AI workers: UI/UX, Manual QA, Automated Testing (Playwright), Fullstack E2E Dev, HLD, LLD, Wireframing, Prototyping, Planning, Controllers, Desk UI, TDD, Code Review, Security, DevOps, Migrations, Reporting, APIs, Docs |
+| **Skills** | 18 | Production workflows: HLD/LLD design, Wireframing & Prototyping, QA test automation, Turnkey scaffolding, DocType modeling, QueryBuilder, `hooks.py`, client scripts, REST APIs, permissions, TDD, background jobs, reports, patches, Bench CLI, Frappe UI, Portal |
+| **Commands** | 20 | Slash commands: `/frappe:hld`, `/frappe:lld`, `/frappe:wireframe`, `/frappe:prototype`, `/frappe:build-e2e`, `/frappe:manual-qa`, `/frappe:e2e-test`, `/frappe:plan`, `/frappe:doctype`, `/frappe:controller`, `/frappe:test`, `/frappe:security`, `/frappe:bench`, etc. |
 | **Rules** | 5 | Always-loaded coding standards: Core architecture, Python backend, Desk JS, Security, and Database optimization |
 | **Frappe Shield** | Included | AST-based static security analyzer detecting SQLi in `frappe.db.sql`, `commit()` violations, and unvalidated guest APIs |
 
 ---
 
-## 🛠️ Key Slash Commands
+## 🛠️ The 20 Specialist Agents
 
-- `/frappe:plan "<feature>"` — Architect a new Frappe feature or app with full DocType schema blueprints.
-- `/frappe:doctype "<Name>"` — Scaffold complete `.json`, `.py`, `.js`, and `test_*.py` files.
-- `/frappe:controller "<Name>"` — Implement controller lifecycle hooks (`validate`, `on_submit`).
-- `/frappe:client-script "<Name>"` — Generate reactive Desk UI form scripts and custom dialogs.
-- `/frappe:hook [event|cron]` — Wire events or cron schedules in `hooks.py`.
-- `/frappe:api "<name>"` — Create secure `@frappe.whitelist()` endpoints.
-- `/frappe:test "<Name>"` — Scaffold unit tests with `FrappeTestCase`.
-- `/frappe:review [path]` — Fresh-context code reviewer checking for Frappe anti-patterns.
-- `/frappe:security [path]` — Audit code for SQL injection, permission bypass, and XSS.
-- `/frappe:patch "<desc>"` — Generate safe, idempotent database migration patch in `patches.txt`.
-- `/frappe:bench [task]` — Run and troubleshoot bench commands and site issues.
-- `/frappe:help` — Show command quick reference.
+| Agent | Responsibility |
+|---|---|
+| `frappe-hld-architect` | High-Level Design (HLD) with Mermaid C4 architecture diagrams |
+| `frappe-lld-designer` | Low-Level Design (LLD) with Mermaid ER diagrams & state machines |
+| `frappe-ui-ux-designer` | UI/UX design, desk ergonomics, workspace dashboards, mobile UX |
+| `frappe-wireframe-builder` | Visual ASCII, Markdown, and SVG wireframe mockups |
+| `frappe-interactive-prototyper`| Clickable interactive single-file HTML/Vue prototypes |
+| `frappe-fullstack-developer` | Turnkey end-to-end fullstack feature synthesis without placeholders |
+| `frappe-planner` | Architectural blueprinting, DocType taxonomy & build sequence |
+| `frappe-architect` | System-level design, bench multi-tenancy & RQ queue topology |
+| `frappe-backend-builder` | Python DocType controllers, lifecycle hooks & QueryBuilder |
+| `frappe-desk-builder` | Desk client scripts, form UI events, dialogs & buttons |
+| `frappe-tdd-guide` | Test-driven development with `FrappeTestCase` unit tests |
+| `frappe-manual-qa` | Comprehensive manual test plans, edge-case matrices & sign-off |
+| `frappe-automated-tester` | Playwright E2E browser automation & REST API regression tests |
+| `frappe-code-reviewer` | Fresh-context reviewer detecting Frappe anti-patterns |
+| `frappe-security-reviewer` | Security auditing for SQLi, broken access control & XSS |
+| `frappe-bench-devops` | Bench CLI operations, Redis/RQ worker tuning & site repair |
+| `frappe-migration-patcher` | Database schema migrations & idempotent `patches.txt` scripts |
+| `frappe-report-builder` | Script Reports (Python + JS) & Dashboard Charts |
+| `frappe-api-integrator` | REST APIs, webhook listeners & OAuth2 client integration |
+| `frappe-doc-updater` | Auto-documentation for DocTypes, APIs & hooks registries |
 
 ---
 
@@ -68,14 +80,10 @@ Run static analysis against any Frappe application:
 python bin/frappe-shield.py path/to/your/frappe_app
 ```
 
-Detects:
-- SQL injection in `frappe.db.sql()`
-- Accidental `frappe.db.commit()` inside controller events
-- Missing rate limits on public `@frappe.whitelist(allow_guest=True)` APIs
-- Direct `docstatus = 1` assignment
-- N+1 query bottlenecks
-
 ---
 
 ## 📖 Complete Documentation
-Read the complete guide: [ECC_Frappe_Complete_Setup_Guide.md](docs/ECC_Frappe_Complete_Setup_Guide.md)
+- **Master Setup Guide**: [ECC_Frappe_Complete_Setup_Guide.md](docs/ECC_Frappe_Complete_Setup_Guide.md)
+- **Standard Operating Procedure (SOP)**: [FRAPPE_ECC_SOP.md](docs/FRAPPE_ECC_SOP.md)
+- **SOP Word Document**: [FRAPPE_ECC_SOP.docx](docs/FRAPPE_ECC_SOP.docx)
+- **SOP PDF Document**: [FRAPPE_ECC_SOP.pdf](docs/FRAPPE_ECC_SOP.pdf)
