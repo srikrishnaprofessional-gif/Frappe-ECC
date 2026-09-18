@@ -1,0 +1,10 @@
+{
+  "name": "frappe-ecc",
+  "rules": [
+    "rules/common/frappe-core-rules.md",
+    "rules/python/frappe-backend-rules.md",
+    "rules/javascript/frappe-frontend-rules.md",
+    "rules/security/frappe-security-rules.md",
+    "rules/database/frappe-database-rules.md"
+  ]
+}

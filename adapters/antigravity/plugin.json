@@ -1,0 +1,21 @@
+{
+  "name": "frappe-ecc",
+  "version": "1.0.0",
+  "description": "Engineering Coordination Center for Frappe Framework & ERPNext",
+  "skills": [
+    "frappe-doctype-design",
+    "frappe-orm-and-queries",
+    "frappe-hooks-and-events",
+    "frappe-client-scripts",
+    "frappe-rest-api",
+    "frappe-permissions-security",
+    "frappe-testing-tdd",
+    "frappe-background-jobs",
+    "frappe-reports-and-dashboards",
+    "frappe-patches-migrations",
+    "frappe-bench-cli",
+    "frappe-ui-vue",
+    "frappe-portal-web",
+    "frappe-shield-security-audit"
+  ]
+}

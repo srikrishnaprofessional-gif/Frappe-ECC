@@ -1,0 +1,12 @@
+{
+  "name": "frappe-ecc",
+  "version": "1.0.0",
+  "description": "Engineering Coordination Center for Frappe Framework & ERPNext",
+  "author": "Antigravity Engineering",
+  "commands": "./commands",
+  "agents": "./agents",
+  "skills": "./skills",
+  "hooks": {
+    "post_file_edit": "python bin/frappe-shield.py --json"
+  }
+}
