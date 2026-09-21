@@ -3,231 +3,1188 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Frappe Desk — Equipment Loan Prototype</title>
+  <title>Frappe Desk — Next-Gen IT Equipment Loan Management</title>
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS & Vue 3 -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          },
+          animation: {
+            'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'slide-in': 'slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            'fade-in': 'fadeIn 0.2s ease-out',
+          },
+          keyframes: {
+            slideIn: {
+              '0%': { opacity: 0, transform: 'translateY(12px) scale(0.98)' },
+              '100%': { opacity: 1, transform: 'translateY(0) scale(1)' },
+            },
+            fadeIn: {
+              '0%': { opacity: 0 },
+              '100%': { opacity: 1 },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: -0.011em;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .badge-glow-emerald {
+      box-shadow: 0 0 12px -2px rgba(16, 185, 129, 0.4);
+    }
+    .badge-glow-blue {
+      box-shadow: 0 0 12px -2px rgba(59, 130, 246, 0.4);
+    }
+    .badge-glow-amber {
+      box-shadow: 0 0 12px -2px rgba(245, 158, 11, 0.4);
+    }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800 antialiased min-h-screen">
-  <div id="app" class="flex h-screen overflow-hidden">
-    
-    <!-- Frappe Desk Sidebar -->
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex">
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen overflow-hidden selection:bg-brand-500 selection:text-white">
+  
+  <div id="app" class="flex h-screen w-full relative">
+
+    <!-- 1. MAANG-GRADE COLLAPSIBLE SIDEBAR -->
+    <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-slate-900 text-slate-300 flex flex-col justify-between transition-all duration-300 ease-in-out border-r border-slate-800 z-30 shrink-0">
       <div>
-        <div class="h-14 border-b border-gray-200 flex items-center px-4 space-x-3">
-          <div class="w-7 h-7 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-sm">F</div>
-          <span class="font-semibold text-gray-900 tracking-tight">Frappe Framework</span>
+        <!-- App Branding -->
+        <div class="h-16 flex items-center px-4 justify-between border-b border-slate-800/80">
+          <div class="flex items-center space-x-3 overflow-hidden">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-500 to-sky-400 flex items-center justify-center text-white font-black text-base shadow-lg shadow-brand-500/30 shrink-0">
+              <i class="fa-solid fa-cube text-sm"></i>
+            </div>
+            <div v-if="sidebarOpen" class="flex flex-col animate-fade-in truncate">
+              <span class="font-bold text-white text-sm tracking-tight flex items-center gap-1.5">
+                Frappe ECC
+                <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">v15.2</span>
+              </span>
+              <span class="text-[11px] text-slate-400">Enterprise Hardware Fleet</span>
+            </div>
+          </div>
+          <button @click="sidebarOpen = !sidebarOpen" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+            <i :class="sidebarOpen ? 'fa-angles-left' : 'fa-angles-right'" class="fa-solid text-xs"></i>
+          </button>
         </div>
-        <nav class="p-4 space-y-1 text-sm font-medium">
-          <a href="#" class="flex items-center px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-house w-6 text-gray-400"></i> Home</a>
-          <a href="#" class="flex items-center px-3 py-2 text-blue-600 bg-blue-50 rounded-lg"><i class="fa-solid fa-laptop-file w-6 text-blue-600"></i> Equipment Loans</a>
-          <a href="#" class="flex items-center px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-boxes-stacked w-6 text-gray-400"></i> Loanable Assets</a>
-          <a href="#" class="flex items-center px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-users w-6 text-gray-400"></i> Employees</a>
-        </nav>
+
+        <!-- Navigation Links -->
+        <div class="p-3 space-y-1">
+          <div v-if="sidebarOpen" class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Main Modules</div>
+          
+          <button @click="activeView = 'form'" :class="activeView === 'form' ? 'bg-brand-600/20 text-white font-semibold border-brand-500' : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-200 border-transparent'" class="w-full flex items-center px-3 py-2.5 rounded-xl border text-xs transition duration-150 group">
+            <i class="fa-solid fa-file-signature text-brand-400 w-6 text-sm shrink-0"></i>
+            <span v-if="sidebarOpen" class="ml-2 truncate flex-1 text-left">Active Loan Form</span>
+            <span v-if="sidebarOpen && doc.docstatus === 1" class="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-mono">Live</span>
+          </button>
+
+          <button @click="activeView = 'assets'" :class="activeView === 'assets' ? 'bg-brand-600/20 text-white font-semibold border-brand-500' : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-200 border-transparent'" class="w-full flex items-center px-3 py-2.5 rounded-xl border text-xs transition duration-150 group">
+            <i class="fa-solid fa-boxes-stacked text-sky-400 w-6 text-sm shrink-0"></i>
+            <span v-if="sidebarOpen" class="ml-2 truncate flex-1 text-left">Master Inventory</span>
+            <span v-if="sidebarOpen" class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">{{ assetCatalog.length }}</span>
+          </button>
+
+          <button @click="activeView = 'loans'" :class="activeView === 'loans' ? 'bg-brand-600/20 text-white font-semibold border-brand-500' : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-200 border-transparent'" class="w-full flex items-center px-3 py-2.5 rounded-xl border text-xs transition duration-150 group">
+            <i class="fa-solid fa-rectangle-list text-emerald-400 w-6 text-sm shrink-0"></i>
+            <span v-if="sidebarOpen" class="ml-2 truncate flex-1 text-left">All Loan Records</span>
+            <span v-if="sidebarOpen" class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono">4</span>
+          </button>
+
+          <button @click="activeView = 'analytics'" :class="activeView === 'analytics' ? 'bg-brand-600/20 text-white font-semibold border-brand-500' : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-200 border-transparent'" class="w-full flex items-center px-3 py-2.5 rounded-xl border text-xs transition duration-150 group">
+            <i class="fa-solid fa-chart-pie text-violet-400 w-6 text-sm shrink-0"></i>
+            <span v-if="sidebarOpen" class="ml-2 truncate flex-1 text-left">Fleet Analytics</span>
+          </button>
+
+          <div v-if="sidebarOpen" class="pt-4 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Developer & QA Tools</div>
+
+          <button @click="showApiInspector = true" class="w-full flex items-center px-3 py-2 rounded-xl text-xs text-slate-400 hover:bg-slate-800/70 hover:text-amber-300 transition group">
+            <i class="fa-solid fa-terminal text-amber-400 w-6 text-sm shrink-0"></i>
+            <span v-if="sidebarOpen" class="ml-2 truncate flex-1 text-left">REST API Inspector</span>
+            <span v-if="sidebarOpen" class="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono">REST</span>
+          </button>
+
+          <button @click="showVoucherModal = true" class="w-full flex items-center px-3 py-2 rounded-xl text-xs text-slate-400 hover:bg-slate-800/70 hover:text-teal-300 transition group">
+            <i class="fa-solid fa-print text-teal-400 w-6 text-sm shrink-0"></i>
+            <span v-if="sidebarOpen" class="ml-2 truncate flex-1 text-left">Print Loan Voucher</span>
+          </button>
+        </div>
       </div>
-      <div class="p-4 border-t border-gray-200 flex items-center space-x-3">
-        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">SK</div>
-        <div>
-          <p class="text-xs font-semibold text-gray-800">Srikrishna RG</p>
-          <p class="text-[11px] text-gray-400">IT Administrator</p>
+
+      <!-- User Profile & System Status -->
+      <div class="p-3 border-t border-slate-800/80 bg-slate-950/40">
+        <div class="flex items-center space-x-3 p-2 rounded-xl hover:bg-slate-800/50 cursor-pointer transition">
+          <div class="relative shrink-0">
+            <img class="w-9 h-9 rounded-full ring-2 ring-brand-500/50" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Avatar">
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+          </div>
+          <div v-if="sidebarOpen" class="truncate flex-1">
+            <div class="text-xs font-semibold text-white truncate">Srikrishna RG</div>
+            <div class="text-[10px] text-slate-400 flex items-center gap-1">
+              <i class="fa-solid fa-shield-halved text-brand-400 text-[9px]"></i> IT Asset Admin
+            </div>
+          </div>
         </div>
       </div>
     </aside>
 
-    <!-- Main Workspace -->
-    <div class="flex-1 flex flex-col overflow-y-auto">
+    <!-- 2. MAIN APPLICATION WORKSPACE -->
+    <div class="flex-1 flex flex-col min-w-0 bg-slate-50/60 overflow-hidden">
       
-      <!-- Awesomebar / Topnav -->
-      <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10 sticky top-0">
-        <div class="flex items-center space-x-2 text-sm text-gray-500">
-          <span class="hover:text-gray-700 cursor-pointer">IT Management</span>
-          <span>/</span>
-          <span class="text-gray-900 font-medium">Equipment Loan</span>
+      <!-- TOP NAVIGATION BAR (MAANG HEADER) -->
+      <header class="h-16 bg-white border-b border-slate-200/80 flex items-center justify-between px-6 z-20 shrink-0 shadow-sm">
+        
+        <!-- Breadcrumb & Workspace context -->
+        <div class="flex items-center space-x-2 text-xs">
+          <span class="px-2 py-1 rounded-md bg-slate-100 font-semibold text-slate-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-building-columns text-slate-500"></i> SF Headquarters Fleet
+          </span>
+          <span class="text-slate-400">/</span>
+          <span class="text-slate-500 font-medium">IT Asset Management</span>
+          <span class="text-slate-400">/</span>
+          <span class="font-bold text-slate-900 bg-brand-50 text-brand-700 px-2 py-0.5 rounded border border-brand-200/60">
+            Equipment Loan
+          </span>
         </div>
-        <div class="w-80 relative">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-gray-400"></i>
-          <input type="text" placeholder="Search or type a command (Ctrl + G)" class="w-full pl-8 pr-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+
+        <!-- Awesomebar / Global Quick Search -->
+        <div class="w-96 relative hidden md:block">
+          <div @click="showCommandPalette = true" class="flex items-center justify-between px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200/80 rounded-xl border border-slate-200 text-xs text-slate-500 cursor-pointer transition shadow-inner">
+            <div class="flex items-center gap-2 truncate">
+              <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+              <span>Quick search assets, loans, employees...</span>
+            </div>
+            <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-mono font-semibold text-slate-600 shadow-sm">⌘K</kbd>
+          </div>
+        </div>
+
+        <!-- Top Right Actions -->
+        <div class="flex items-center space-x-3">
+          <!-- Notification Bell -->
+          <div class="relative">
+            <button @click="toggleNotifications" class="p-2 text-slate-500 hover:text-slate-800 rounded-xl hover:bg-slate-100 transition relative">
+              <i class="fa-regular fa-bell text-sm"></i>
+              <span v-if="unreadNotifications > 0" class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
+            </button>
+            
+            <!-- Notifications Dropdown -->
+            <div v-if="notificationsOpen" class="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 z-50 animate-slide-in">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-xs font-bold text-slate-900">System Activity</span>
+                <button @click="unreadNotifications = 0" class="text-[11px] text-brand-600 hover:underline">Mark read</button>
+              </div>
+              <div class="divide-y divide-slate-100 max-h-64 overflow-y-auto mt-2 space-y-1">
+                <div v-for="notif in activityFeed.slice(0, 4)" :key="notif.id" class="py-2 text-xs flex items-start space-x-2.5">
+                  <div :class="notif.badgeClass" class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px]">
+                    <i :class="notif.icon"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-800 leading-snug">{{ notif.title }}</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">{{ notif.time }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Benchmark Bench Environment Badge -->
+          <div class="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-full text-xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Bench Online</span>
+          </div>
+
+          <!-- Quick Help / Documentation Modal Trigger -->
+          <button @click="showSopGuide = true" class="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm transition">
+            <i class="fa-regular fa-circle-question text-brand-400"></i>
+            <span>SOP Docs</span>
+          </button>
         </div>
       </header>
 
-      <!-- Document View -->
-      <main class="p-6 max-w-5xl mx-auto w-full space-y-6">
+      <!-- VIEW 1: ACTIVE LOAN FORM VIEW -->
+      <main v-if="activeView === 'form'" class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
         
-        <!-- Document Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
-          <div class="flex items-center space-x-3">
-            <div>
-              <span class="text-[11px] uppercase font-bold text-gray-400 tracking-wider">Equipment Loan</span>
-              <h1 class="text-2xl font-bold text-gray-900">{{ doc.name }}</h1>
-            </div>
-            <span :class="statusBadgeClass" class="px-2.5 py-1 rounded-full text-xs font-semibold flex items-center space-x-1.5">
-              <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass"></span>
-              <span>{{ doc.status }}</span>
-            </span>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex items-center space-x-2">
-            <button v-if="doc.docstatus === 0" @click="submitDoc" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm transition">
-              <i class="fa-solid fa-check mr-1"></i> Submit Loan
-            </button>
-            <button v-if="doc.docstatus === 1 && doc.status === 'Active'" @click="showReturnDialog = true" class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm transition">
-              <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Process Return
-            </button>
-            <button v-if="doc.docstatus === 1" @click="cancelDoc" class="border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold px-3 py-2 rounded-md transition">
-              Cancel
-            </button>
-            <button @click="resetDemo" class="text-xs text-gray-500 hover:text-gray-800 underline ml-2">Reset Demo</button>
-          </div>
-        </div>
-
-        <!-- Alert Toast -->
-        <div v-if="alertMessage" class="p-3 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-md flex justify-between items-center animate-fade-in">
-          <span><i class="fa-solid fa-circle-info mr-1.5"></i> {{ alertMessage }}</span>
-          <button @click="alertMessage = ''" class="text-blue-500 hover:text-blue-700">&times;</button>
-        </div>
-
-        <!-- Form Body Card -->
-        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-6">
+        <!-- HEADER ACTION HERO CARD -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
+          <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-gradient-to-br from-brand-100/40 to-indigo-50/20 rounded-full blur-2xl pointer-events-none"></div>
           
-          <!-- Section 1 -->
-          <div>
-            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4 border-b pb-2">1. Borrower & Schedule</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Borrower Employee <span class="text-red-500">*</span></label>
-                <select v-model="doc.borrower" :disabled="doc.docstatus !== 0" class="w-full text-xs p-2 border rounded border-gray-300 focus:ring-1 focus:ring-blue-500">
-                  <option value="EMP-00104 - Alex Mercer">EMP-00104 - Alex Mercer (Software Engineer)</option>
-                  <option value="EMP-00105 - Jordan Lee">EMP-00105 - Jordan Lee (Has Overdue Alert)</option>
-                </select>
+          <div class="flex items-start md:items-center space-x-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-800 flex items-center justify-center text-white shadow-md shrink-0">
+              <i class="fa-solid fa-laptop-file text-2xl text-brand-400"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-3">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">DocType: Equipment Loan</span>
+                <span :class="statusBadgeClass" class="px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center space-x-1.5 border">
+                  <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass"></span>
+                  <span>{{ doc.status }}</span>
+                </span>
               </div>
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Department</label>
-                <input type="text" v-model="doc.department" readonly class="w-full text-xs p-2 bg-gray-50 border rounded border-gray-200 text-gray-600">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Loan Date <span class="text-red-500">*</span></label>
-                <input type="date" v-model="doc.loan_date" :disabled="doc.docstatus !== 0" class="w-full text-xs p-2 border rounded border-gray-300">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Expected Return Date <span class="text-red-500">*</span></label>
-                <input type="date" v-model="doc.expected_return_date" :disabled="doc.docstatus !== 0" class="w-full text-xs p-2 border rounded border-gray-300">
-              </div>
+              <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5 flex items-center gap-2">
+                {{ doc.name }}
+                <button @click="copyDocName" class="text-slate-400 hover:text-brand-600 text-sm" title="Copy Document ID">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </h1>
+              <p class="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                <span>Created {{ doc.loan_date }}</span>
+                <span>&bull;</span>
+                <span class="font-mono text-slate-600">Assigned by: IT Operations Desk</span>
+              </p>
             </div>
           </div>
 
-          <!-- Section 2: Child Table -->
-          <div>
-            <div class="flex justify-between items-center mb-3 border-b pb-2">
-              <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">2. Allocated Hardware Items</h2>
-              <button v-if="doc.docstatus === 0" @click="addRow" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">
-                <i class="fa-solid fa-plus mr-1"></i> Add Hardware Item
+          <!-- PRIMARY ACTION CONTROLLER BUTTONS (Frappe Submittable Lifecycle) -->
+          <div class="flex flex-wrap items-center gap-2.5 shrink-0 z-10">
+            
+            <!-- Submit Button (Enabled in Draft status only) -->
+            <button 
+              v-if="doc.docstatus === 0" 
+              @click="submitDoc" 
+              :disabled="hasOverdueBorrower || doc.items.length === 0"
+              :class="hasOverdueBorrower || doc.items.length === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 text-slate-500' : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/25 hover:shadow-brand-500/40 hover:-translate-y-0.5'" 
+              class="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-all duration-150">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Submit & Lock Assets</span>
+            </button>
+
+            <!-- Process Return Button (Enabled in Active status) -->
+            <button 
+              v-if="doc.docstatus === 1 && doc.status === 'Active'" 
+              @click="openReturnModal" 
+              class="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all duration-150">
+              <i class="fa-solid fa-arrow-rotate-left"></i>
+              <span>Process Equipment Return</span>
+            </button>
+
+            <!-- Cancel Document Button (Reverses asset status) -->
+            <button 
+              v-if="doc.docstatus === 1 && doc.status === 'Active'" 
+              @click="cancelDoc" 
+              class="flex items-center gap-1.5 text-xs font-semibold px-3 py-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition">
+              <i class="fa-solid fa-ban"></i>
+              <span>Cancel Loan</span>
+            </button>
+
+            <!-- Print Voucher Button -->
+            <button @click="showVoucherModal = true" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition shadow-sm">
+              <i class="fa-solid fa-print text-slate-500"></i>
+              <span>Voucher</span>
+            </button>
+
+            <!-- API Inspector Trigger -->
+            <button @click="showApiInspector = true" class="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-amber-600 hover:bg-amber-50/50 transition shadow-sm" title="View Frappe REST API Payload">
+              <i class="fa-solid fa-code text-xs"></i>
+            </button>
+
+            <!-- Reset Demo State Button -->
+            <button @click="resetDemo" class="text-xs text-slate-400 hover:text-slate-800 underline px-2 py-1 transition" title="Reset interactive prototype back to Draft">
+              Reset Demo
+            </button>
+          </div>
+        </div>
+
+        <!-- MAANG METRIC / TELEMETRY CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- Card 1: Total Value -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden group hover:border-brand-200 transition">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold">
+              <span>Total Fleet Liability</span>
+              <div class="w-8 h-8 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+                <i class="fa-solid fa-dollar-sign text-xs"></i>
+              </div>
+            </div>
+            <div class="mt-2 flex items-baseline gap-2">
+              <span class="text-2xl font-black text-slate-900 font-mono tracking-tight">${{ totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+              <span class="text-[11px] text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/50">Insured</span>
+            </div>
+            <div class="mt-3 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-brand-500 h-full rounded-full transition-all duration-500" :style="{ width: Math.min((totalValue / 8000) * 100, 100) + '%' }"></div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1.5 flex justify-between">
+              <span>Policy Cap: $8,000.00</span>
+              <span class="font-mono">{{ ((totalValue / 8000) * 100).toFixed(0) }}%</span>
+            </p>
+          </div>
+
+          <!-- Card 2: Loan Duration -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden group hover:border-brand-200 transition">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold">
+              <span>Loan Duration</span>
+              <div class="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+                <i class="fa-regular fa-calendar-days text-xs"></i>
+              </div>
+            </div>
+            <div class="mt-2 flex items-baseline gap-2">
+              <span class="text-2xl font-black text-slate-900 font-mono tracking-tight">{{ loanDurationDays }} Days</span>
+              <span :class="loanDurationDays > 30 ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-sky-50 text-sky-700 border-sky-200'" class="text-[11px] font-semibold px-1.5 py-0.5 rounded border">
+                {{ loanDurationDays > 30 ? 'Policy Breach' : 'Within SLA' }}
+              </span>
+            </div>
+            <div class="mt-3 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div :class="loanDurationDays > 30 ? 'bg-rose-500' : 'bg-sky-500'" class="h-full rounded-full transition-all duration-500" :style="{ width: Math.min((loanDurationDays / 30) * 100, 100) + '%' }"></div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1.5 flex justify-between">
+              <span>Corporate SLA: 30 Days max</span>
+              <span class="font-mono">{{ loanDurationDays }} / 30 d</span>
+            </p>
+          </div>
+
+          <!-- Card 3: Allocated Items Count -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden group hover:border-brand-200 transition">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold">
+              <span>Allocated Hardware Items</span>
+              <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <i class="fa-solid fa-microchip text-xs"></i>
+              </div>
+            </div>
+            <div class="mt-2 flex items-baseline gap-2">
+              <span class="text-2xl font-black text-slate-900 font-mono tracking-tight">{{ doc.items.length }} Units</span>
+              <span class="text-[11px] text-indigo-700 font-semibold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200/50">Checked Out</span>
+            </div>
+            <div class="mt-3 flex items-center gap-1 text-[11px] text-slate-500">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>All items registered with barcoded serials</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Borrower Eligibility Health -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden group hover:border-brand-200 transition">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold">
+              <span>Borrower Clearance</span>
+              <div :class="hasOverdueBorrower ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'" class="w-8 h-8 rounded-xl flex items-center justify-center">
+                <i :class="hasOverdueBorrower ? 'fa-triangle-exclamation' : 'fa-circle-check'" class="fa-solid text-xs"></i>
+              </div>
+            </div>
+            <div class="mt-2 flex items-baseline gap-2">
+              <span :class="hasOverdueBorrower ? 'text-rose-600' : 'text-emerald-700'" class="text-xl font-bold tracking-tight">
+                {{ hasOverdueBorrower ? 'BLOCKED' : 'CLEARED' }}
+              </span>
+              <span class="text-[11px] text-slate-500 font-medium">Risk: {{ hasOverdueBorrower ? 'HIGH' : 'LOW' }}</span>
+            </div>
+            <div class="mt-3 text-[11px] text-slate-500 leading-snug">
+              {{ hasOverdueBorrower ? 'Existing overdue item LOAN-2026-00008 must be returned' : 'Good standing, zero overdue records' }}
+            </div>
+          </div>
+
+        </div>
+
+        <!-- OVERDUE BORROWER REJECTION ALERT BANNER (Interactive Simulation of TS-06) -->
+        <div v-if="hasOverdueBorrower" class="p-4 bg-rose-50 border-l-4 border-rose-600 rounded-xl flex items-start justify-between gap-3 animate-slide-in shadow-sm">
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fa-solid fa-lock text-sm"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-rose-900 uppercase tracking-wide">Borrower Policy Violation: Active Overdue Equipment Detected</h4>
+              <p class="text-xs text-rose-700 mt-1">
+                Employee <strong class="font-mono text-rose-900">EMP-00105 (Jordan Lee)</strong> is locked out by Frappe controller method <code class="bg-rose-100 px-1 py-0.5 rounded text-[11px] font-mono">validate_borrower_eligibility()</code>. Loan <strong class="font-mono">LOAN-2026-00008</strong> is 14 days overdue. All submissions are automatically rejected.
+              </p>
+              <button @click="selectBorrower('EMP-00104')" class="mt-2 text-xs font-bold text-rose-800 underline hover:text-rose-950">
+                Switch back to eligible borrower (Alex Mercer) &rarr;
               </button>
             </div>
+          </div>
+          <span class="text-xs font-bold px-2 py-1 bg-rose-200/60 text-rose-900 rounded font-mono shrink-0">TS-06 FAILSAFE</span>
+        </div>
 
-            <div class="overflow-x-auto border rounded-lg">
-              <table class="w-full text-left text-xs">
-                <thead class="bg-gray-50 text-gray-600 border-b">
-                  <tr>
-                    <th class="p-3 w-12 text-center">#</th>
-                    <th class="p-3">Asset Item</th>
-                    <th class="p-3">Serial Number</th>
-                    <th class="p-3">Condition on Loan</th>
-                    <th class="p-3 text-right">Value (USD)</th>
-                    <th v-if="doc.docstatus === 0" class="p-3 w-16 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                  <tr v-for="(item, idx) in doc.items" :key="idx" class="hover:bg-gray-50">
-                    <td class="p-3 text-center text-gray-400">{{ idx + 1 }}</td>
-                    <td class="p-3 font-medium text-gray-800">
-                      <select v-if="doc.docstatus === 0" v-model="item.asset" @change="onAssetSelect(item)" class="p-1 border rounded text-xs w-full">
-                        <option value="AST-001">MacBook Pro 16" M3 Max</option>
-                        <option value="AST-002">Apple Studio Display 27"</option>
-                        <option value="AST-003">Magic Keyboard & Mouse Kit</option>
-                      </select>
-                      <span v-else>{{ item.asset_name }}</span>
-                    </td>
-                    <td class="p-3 text-gray-500 font-mono">{{ item.serial_no }}</td>
-                    <td class="p-3 text-gray-700">{{ item.condition }}</td>
-                    <td class="p-3 text-right font-semibold text-gray-900">${{ item.value.toFixed(2) }}</td>
-                    <td v-if="doc.docstatus === 0" class="p-3 text-center">
-                      <button @click="removeRow(idx)" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can"></i></button>
-                    </td>
-                  </tr>
-                </tbody>
-                <tfoot class="bg-gray-50 border-t font-semibold text-gray-900">
-                  <tr>
-                    <td colspan="4" class="p-3 text-right">Total Replacement Value:</td>
-                    <td class="p-3 text-right text-sm text-blue-600">${{ totalValue.toFixed(2) }}</td>
-                    <td v-if="doc.docstatus === 0"></td>
-                  </tr>
-                </tfoot>
-              </table>
+        <!-- POLICY 30-DAY WARNING BANNER (Interactive Simulation of TS-03) -->
+        <div v-if="loanDurationDays > 30" class="p-4 bg-amber-50 border-l-4 border-amber-500 rounded-xl flex items-start justify-between gap-3 animate-slide-in shadow-sm">
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wide">30-Day Loan Duration Policy Limit Exceeded</h4>
+              <p class="text-xs text-amber-800 mt-1">
+                Requested duration is <strong class="font-mono">{{ loanDurationDays }} days</strong>. Maximum allowed period per company policy is 30 days. Submission will throw <code class="bg-amber-100 px-1 py-0.5 rounded text-[11px] font-mono">frappe.ValidationError</code>.
+              </p>
+              <button @click="fixReturnDate" class="mt-2 text-xs font-bold text-amber-900 underline hover:text-amber-950">
+                Auto-adjust return date to 14 days &rarr;
+              </button>
+            </div>
+          </div>
+          <span class="text-xs font-bold px-2 py-1 bg-amber-200/60 text-amber-900 rounded font-mono shrink-0">TS-03 POLICY</span>
+        </div>
+
+        <!-- MAIN FORM SECTION (Borrower & Schedule) -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 md:p-8 space-y-8">
+          
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div class="flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">1</span>
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700">Borrower Identity & Authorization</h2>
+              </div>
+              <span class="text-xs text-slate-400 font-mono">Section: Details</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              
+              <!-- Borrower Employee Selection -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                  Borrower Employee <span class="text-rose-500">*</span>
+                </label>
+                <select 
+                  v-model="doc.borrower" 
+                  @change="onBorrowerChange"
+                  :disabled="doc.docstatus !== 0" 
+                  class="w-full text-xs font-medium p-3 bg-slate-50 border rounded-xl border-slate-300 focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none transition disabled:opacity-60 disabled:cursor-not-allowed">
+                  <option value="EMP-00104 - Alex Mercer">EMP-00104 - Alex Mercer (Software Engineer - Eligible)</option>
+                  <option value="EMP-00105 - Jordan Lee">EMP-00105 - Jordan Lee (Design Lead - HAS OVERDUE LOAN)</option>
+                  <option value="EMP-00108 - Maya Lin">EMP-00108 - Maya Lin (DevOps Architect - Eligible)</option>
+                </select>
+                <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
+                  <i class="fa-solid fa-user-check text-slate-400"></i>
+                  <span>Select employee to test borrower eligibility rules.</span>
+                </p>
+              </div>
+
+              <!-- Department -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Assigned Department</label>
+                <div class="relative">
+                  <input type="text" v-model="doc.department" readonly class="w-full text-xs font-medium p-3 bg-slate-100/80 border rounded-xl border-slate-200 text-slate-600 cursor-not-allowed">
+                  <i class="fa-solid fa-lock absolute right-3.5 top-3.5 text-xs text-slate-400"></i>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1.5">Auto-fetched from Employee master record.</p>
+              </div>
+
+              <!-- Cost Center -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Cost Center</label>
+                <input type="text" value="ENG-CLOUD-01" readonly class="w-full text-xs font-medium p-3 bg-slate-100/80 border rounded-xl border-slate-200 text-slate-600 cursor-not-allowed">
+                <p class="text-[11px] text-slate-400 mt-1.5">Default department charge code.</p>
+              </div>
+
+              <!-- Loan Date -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                  Loan Effective Date <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="date" 
+                  v-model="doc.loan_date" 
+                  @change="validateDates"
+                  :disabled="doc.docstatus !== 0" 
+                  class="w-full text-xs font-medium p-3 bg-slate-50 border rounded-xl border-slate-300 focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none transition disabled:opacity-60 disabled:cursor-not-allowed">
+              </div>
+
+              <!-- Expected Return Date -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                  Expected Return Date <span class="text-rose-500">*</span>
+                </label>
+                <input 
+                  type="date" 
+                  v-model="doc.expected_return_date" 
+                  @change="validateDates"
+                  :disabled="doc.docstatus !== 0" 
+                  class="w-full text-xs font-medium p-3 bg-slate-50 border rounded-xl border-slate-300 focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none transition disabled:opacity-60 disabled:cursor-not-allowed">
+              </div>
+
+              <!-- Purpose -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Business Purpose</label>
+                <input 
+                  type="text" 
+                  v-model="doc.purpose" 
+                  :disabled="doc.docstatus !== 0" 
+                  placeholder="e.g. Remote Cloud Infrastructure Deployment Sprint"
+                  class="w-full text-xs font-medium p-3 bg-slate-50 border rounded-xl border-slate-300 focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none transition disabled:opacity-60 disabled:cursor-not-allowed">
+              </div>
+
             </div>
           </div>
 
-          <!-- Section 3: Return Information -->
-          <div v-if="doc.status === 'Returned'">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-green-700 mb-2 border-b pb-1">3. Return Verification Record</h2>
-            <div class="bg-green-50 p-4 rounded-lg border border-green-200 text-xs space-y-1">
-              <p><span class="font-semibold text-green-900">Actual Return Date:</span> {{ doc.actual_return_date }}</p>
-              <p><span class="font-semibold text-green-900">Return Inspector Notes:</span> {{ doc.return_notes }}</p>
+          <!-- SECTION 2: CHILD TABLE (Allocated Hardware Items) -->
+          <div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div class="flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">2</span>
+                <div>
+                  <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700">Allocated Hardware Assets</h2>
+                  <p class="text-[11px] text-slate-400">Child Table: <code class="font-mono text-slate-600">Equipment Loan Item</code></p>
+                </div>
+              </div>
+
+              <!-- Add Row Button -->
+              <div v-if="doc.docstatus === 0" class="flex items-center gap-2">
+                <button @click="openQuickAssetDrawer" class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-brand-50 text-brand-700 border border-brand-200/80 hover:bg-brand-100 transition shadow-sm">
+                  <i class="fa-solid fa-plus text-brand-600"></i>
+                  <span>Add Hardware Item</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Dynamic Child Table Grid -->
+            <div class="mt-4 border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm bg-white">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50/80 text-slate-500 border-b border-slate-200/80 font-bold uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th class="p-3.5 w-12 text-center">#</th>
+                      <th class="p-3.5">Asset Item Name</th>
+                      <th class="p-3.5">Serial Number</th>
+                      <th class="p-3.5">Category</th>
+                      <th class="p-3.5">Condition on Loan</th>
+                      <th class="p-3.5 text-right">Value (USD)</th>
+                      <th v-if="doc.docstatus === 0" class="p-3.5 w-16 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    <tr v-for="(item, idx) in doc.items" :key="idx" class="hover:bg-slate-50/70 transition group">
+                      
+                      <!-- Index -->
+                      <td class="p-3.5 text-center text-slate-400 font-mono font-medium">{{ idx + 1 }}</td>
+                      
+                      <!-- Asset Selector / Name -->
+                      <td class="p-3.5">
+                        <div v-if="doc.docstatus === 0">
+                          <select 
+                            v-model="item.asset" 
+                            @change="onAssetChange(item, idx)" 
+                            class="p-2 bg-slate-50 border rounded-lg border-slate-200 text-xs font-semibold text-slate-800 w-full focus:ring-1 focus:ring-brand-500">
+                            <option v-for="asset in availableAssetOptions(item.asset)" :key="asset.name" :value="asset.name">
+                              {{ asset.name }} - {{ asset.asset_name }}
+                            </option>
+                          </select>
+                        </div>
+                        <div v-else class="flex items-center space-x-2">
+                          <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+                            <i :class="getAssetIcon(item.asset)" class="text-xs"></i>
+                          </div>
+                          <div>
+                            <div class="font-bold text-slate-900">{{ item.asset_name }}</div>
+                            <div class="text-[10px] text-slate-400 font-mono">{{ item.asset }}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- Serial Number with Quick Copy -->
+                      <td class="p-3.5">
+                        <div class="flex items-center space-x-1.5">
+                          <span class="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded text-[11px] font-medium">{{ item.serial_no }}</span>
+                          <button @click="copyText(item.serial_no)" class="text-slate-400 hover:text-brand-600 transition" title="Copy Serial">
+                            <i class="fa-regular fa-copy text-[10px]"></i>
+                          </button>
+                        </div>
+                      </td>
+
+                      <!-- Category Badge -->
+                      <td class="p-3.5">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                          {{ item.category || 'Hardware' }}
+                        </span>
+                      </td>
+
+                      <!-- Condition -->
+                      <td class="p-3.5">
+                        <div v-if="doc.docstatus === 0">
+                          <select v-model="item.condition" class="p-1.5 bg-slate-50 border rounded-lg border-slate-200 text-xs">
+                            <option>Brand New</option>
+                            <option>Good</option>
+                            <option>Fair</option>
+                          </select>
+                        </div>
+                        <span v-else class="text-slate-700 font-medium">{{ item.condition }}</span>
+                      </td>
+
+                      <!-- Value -->
+                      <td class="p-3.5 text-right font-mono font-bold text-slate-900 text-sm">
+                        ${{ (item.value || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                      </td>
+
+                      <!-- Delete Row Action -->
+                      <td v-if="doc.docstatus === 0" class="p-3.5 text-center">
+                        <button @click="removeRow(idx)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Remove Item">
+                          <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                      </td>
+
+                    </tr>
+
+                    <!-- Empty State in Table -->
+                    <tr v-if="doc.items.length === 0">
+                      <td colspan="7" class="p-8 text-center text-slate-400">
+                        <i class="fa-solid fa-box-open text-2xl text-slate-300 mb-2"></i>
+                        <p class="text-xs font-semibold text-slate-600">No hardware items allocated yet.</p>
+                        <p class="text-[11px] text-slate-400">Click "Add Hardware Item" to select equipment from catalog.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+
+                  <!-- Table Footer with Summary -->
+                  <tfoot class="bg-slate-50/90 border-t border-slate-200 font-bold text-slate-900">
+                    <tr>
+                      <td colspan="5" class="p-4 text-right text-xs uppercase tracking-wide text-slate-500">Total Replacement Value:</td>
+                      <td class="p-4 text-right text-base font-mono text-brand-600">
+                        ${{ totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                      </td>
+                      <td v-if="doc.docstatus === 0"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- SECTION 3: RETURN VERIFICATION RECORD (Displayed when Returned) -->
+          <div v-if="doc.status === 'Returned'" class="animate-slide-in">
+            <div class="flex items-center space-x-2 pb-3 border-b border-emerald-200">
+              <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">3</span>
+              <h2 class="text-sm font-bold uppercase tracking-wider text-emerald-800">Return Verification & Inspection Audit</h2>
+            </div>
+
+            <div class="mt-4 p-5 bg-gradient-to-r from-emerald-50/90 to-teal-50/50 border border-emerald-200 rounded-2xl space-y-3">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div>
+                  <span class="text-emerald-700 font-bold">Actual Return Timestamp:</span>
+                  <p class="font-mono text-slate-900 mt-0.5">{{ doc.actual_return_date }} (Verified)</p>
+                </div>
+                <div>
+                  <span class="text-emerald-700 font-bold">Inspection Officer:</span>
+                  <p class="font-medium text-slate-900 mt-0.5">Srikrishna RG (IT Asset Admin)</p>
+                </div>
+                <div>
+                  <span class="text-emerald-700 font-bold">Hardware Condition Status:</span>
+                  <p class="font-semibold text-emerald-800 mt-0.5 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i> Passed All Diagnostic Checks
+                  </p>
+                </div>
+              </div>
+              <div class="pt-2 border-t border-emerald-200/60 text-xs">
+                <span class="text-emerald-800 font-bold">Inspector Notes:</span>
+                <p class="text-slate-700 mt-0.5 bg-white/70 p-2.5 rounded-xl border border-emerald-200/50 font-mono text-[11px]">
+                  "{{ doc.return_notes }}"
+                </p>
+              </div>
             </div>
           </div>
 
+        </div>
+
+      </main>
+
+      <!-- VIEW 2: MASTER INVENTORY ASSET MATRIX -->
+      <main v-if="activeView === 'assets'" class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full animate-fade-in">
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Master Hardware Inventory</h1>
+            <p class="text-xs text-slate-500 mt-1">Live synchronized catalog of all loanable enterprise assets.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input 
+              v-model="inventorySearch" 
+              type="text" 
+              placeholder="Filter by name, serial..." 
+              class="text-xs p-2.5 border rounded-xl border-slate-300 w-64 focus:ring-1 focus:ring-brand-500">
+          </div>
+        </div>
+
+        <!-- Inventory Grid Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div v-for="asset in filteredAssets" :key="asset.name" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-4 hover:shadow-md transition">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 text-lg">
+                  <i :class="asset.icon"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900 leading-snug">{{ asset.asset_name }}</h3>
+                  <p class="text-[11px] font-mono text-slate-400">{{ asset.name }} &bull; {{ asset.serial_no }}</p>
+                </div>
+              </div>
+              <span :class="asset.status === 'Available' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'" class="px-2 py-0.5 rounded-full text-[10px] font-bold border">
+                {{ asset.status }}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs pt-3 border-t border-slate-100">
+              <div>
+                <span class="text-slate-400 text-[10px] font-semibold uppercase">Category</span>
+                <p class="font-medium text-slate-700">{{ asset.category }}</p>
+              </div>
+              <div class="text-right">
+                <span class="text-slate-400 text-[10px] font-semibold uppercase">Replacement Val</span>
+                <p class="font-mono font-bold text-slate-900">${{ asset.replacement_value.toFixed(2) }}</p>
+              </div>
+            </div>
+
+            <div class="pt-2 flex items-center justify-between">
+              <button 
+                @click="addAssetToLoan(asset)" 
+                :disabled="asset.status !== 'Available' || doc.docstatus !== 0"
+                :class="asset.status === 'Available' && doc.docstatus === 0 ? 'bg-brand-600 hover:bg-brand-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                class="w-full py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-plus text-xs"></i>
+                <span>{{ asset.status === 'Available' ? 'Borrow in Loan Form' : 'Currently Loaned Out' }}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </main>
+
+      <!-- VIEW 3: ALL LOANS REGISTRY TABLE -->
+      <main v-if="activeView === 'loans'" class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full animate-fade-in">
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Equipment Loans Registry</h1>
+            <p class="text-xs text-slate-500 mt-1">Audit log of all issued, active, overdue, and returned loan slips.</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 border-b font-bold uppercase tracking-wider text-[10px]">
+              <tr>
+                <th class="p-4">Loan ID</th>
+                <th class="p-4">Borrower</th>
+                <th class="p-4">Loan Period</th>
+                <th class="p-4">Total Liability</th>
+                <th class="p-4">Status</th>
+                <th class="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium">
+              <tr class="hover:bg-slate-50 transition bg-brand-50/20">
+                <td class="p-4 font-bold font-mono text-brand-700">{{ doc.name }} (Current)</td>
+                <td class="p-4 text-slate-800">{{ doc.borrower }}</td>
+                <td class="p-4 text-slate-600 font-mono">{{ doc.loan_date }} &rarr; {{ doc.expected_return_date }}</td>
+                <td class="p-4 font-mono font-bold text-slate-900">${{ totalValue.toFixed(2) }}</td>
+                <td class="p-4">
+                  <span :class="statusBadgeClass" class="px-2 py-0.5 rounded-full text-[10px] font-bold border">
+                    {{ doc.status }}
+                  </span>
+                </td>
+                <td class="p-4 text-right">
+                  <button @click="activeView = 'form'" class="text-brand-600 hover:text-brand-800 font-semibold text-xs">Open Form &rarr;</button>
+                </td>
+              </tr>
+              <tr class="hover:bg-slate-50 transition">
+                <td class="p-4 font-bold font-mono text-slate-700">LOAN-2026-00008</td>
+                <td class="p-4 text-slate-800">EMP-00105 - Jordan Lee</td>
+                <td class="p-4 text-slate-600 font-mono">2026-08-15 &rarr; 2026-09-01</td>
+                <td class="p-4 font-mono font-bold text-slate-900">$2,199.00</td>
+                <td class="p-4">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                    Overdue
+                  </span>
+                </td>
+                <td class="p-4 text-right">
+                  <span class="text-rose-600 text-xs font-semibold">14 Days Overdue</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+
+      <!-- VIEW 4: FLEET ANALYTICS -->
+      <main v-if="activeView === 'analytics'" class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full animate-fade-in">
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+          <h1 class="text-2xl font-bold text-slate-900 tracking-tight">IT Equipment Fleet Analytics</h1>
+          <p class="text-xs text-slate-500 mt-1">Utilization rate, replacement liability risk, and loan lifecycle velocity.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold text-slate-400 uppercase">Fleet Asset Utilization</span>
+            <div class="text-3xl font-black text-slate-900 mt-2">78.4%</div>
+            <p class="text-xs text-emerald-600 mt-1"><i class="fa-solid fa-arrow-trend-up"></i> +4.2% from last month</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold text-slate-400 uppercase">Avg Loan Turnaround</span>
+            <div class="text-3xl font-black text-slate-900 mt-2">12.5 Days</div>
+            <p class="text-xs text-slate-500 mt-1">Corporate policy SLA: 30 days</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold text-slate-400 uppercase">Zero Loss Ratio</span>
+            <div class="text-3xl font-black text-emerald-600 mt-2">100%</div>
+            <p class="text-xs text-slate-500 mt-1">0 lost items in current fiscal year</p>
+          </div>
+        </div>
+      </main>
+
     </div>
 
-    <!-- Process Return Modal Dialog -->
-    <div v-if="showReturnDialog" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4 animate-scale-up">
-        <div class="flex justify-between items-center border-b pb-3">
-          <h3 class="text-sm font-bold text-gray-900">Process Equipment Return</h3>
-          <button @click="showReturnDialog = false" class="text-gray-400 hover:text-gray-600">&times;</button>
-        </div>
-        <div class="space-y-3 text-xs">
-          <div>
-            <label class="block font-semibold text-gray-700 mb-1">Return Date</label>
-            <input type="date" v-model="returnForm.return_date" class="w-full p-2 border rounded border-gray-300">
+    <!-- 3. MODAL: PROCESS EQUIPMENT RETURN DIALOG (Interactive TS-07 & API) -->
+    <div v-if="showReturnModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 md:p-8 space-y-5 animate-slide-in border border-slate-200">
+        
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <i class="fa-solid fa-arrow-rotate-left"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Process Equipment Return</h3>
+              <p class="text-xs text-slate-500 font-mono">{{ doc.name }} &bull; {{ doc.borrower.split(' - ')[0] }}</p>
+            </div>
           </div>
+          <button @click="showReturnModal = false" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <!-- Return Date -->
           <div>
-            <label class="block font-semibold text-gray-700 mb-1">Hardware Inspection Checklist</label>
-            <div class="space-y-2 p-2 bg-gray-50 rounded border">
-              <label v-for="item in doc.items" class="flex items-center space-x-2">
-                <input type="checkbox" checked class="rounded text-blue-600">
-                <span>{{ item.asset_name }} ({{ item.serial_no }}) - Operational</span>
+            <label class="block font-bold text-slate-700 mb-1">Actual Return Date <span class="text-rose-500">*</span></label>
+            <input type="date" v-model="returnForm.return_date" class="w-full p-3 bg-slate-50 border rounded-xl border-slate-300 font-medium">
+          </div>
+
+          <!-- Hardware Check-in List -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">Hardware Inspection Checklist (Physical Verification)</label>
+            <div class="space-y-2 p-3 bg-slate-50 rounded-xl border border-slate-200 max-h-40 overflow-y-auto">
+              <label v-for="item in doc.items" :key="item.asset" class="flex items-center space-x-2.5 cursor-pointer hover:bg-white p-1.5 rounded-lg transition">
+                <input type="checkbox" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
+                <span class="text-slate-800 font-medium">{{ item.asset_name }} (<span class="font-mono text-[11px] text-slate-500">{{ item.serial_no }}</span>)</span>
               </label>
             </div>
           </div>
+
+          <!-- Condition Grade -->
           <div>
-            <label class="block font-semibold text-gray-700 mb-1">Inspector Notes</label>
-            <textarea v-model="returnForm.notes" rows="2" class="w-full p-2 border rounded border-gray-300" placeholder="e.g. All cables returned, condition excellent."></textarea>
+            <label class="block font-bold text-slate-700 mb-1">Return Inspection Condition Grade</label>
+            <select v-model="returnForm.grade" class="w-full p-2.5 bg-slate-50 border rounded-xl border-slate-300">
+              <option value="Excellent">Grade A — Pristine / Flawless</option>
+              <option value="Good">Grade B — Normal wear & tear, fully functional</option>
+              <option value="Fair">Grade C — Minor cosmetic scuffs, operational</option>
+            </select>
+          </div>
+
+          <!-- Inspector Notes -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Inspector Verification Notes</label>
+            <textarea 
+              v-model="returnForm.notes" 
+              rows="2" 
+              class="w-full p-3 bg-slate-50 border rounded-xl border-slate-300 font-mono text-[11px]" 
+              placeholder="e.g. Verified by IT Asset Admin. Clean condition, power adapter included."></textarea>
           </div>
         </div>
-        <div class="flex justify-end space-x-2 pt-3 border-t">
-          <button @click="showReturnDialog = false" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-          <button @click="confirmReturn" class="px-4 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white font-semibold rounded">Confirm Return</button>
+
+        <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+          <button @click="showReturnModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">
+            Cancel
+          </button>
+          <button @click="confirmReturn" class="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-500/25 transition">
+            Confirm & Release Assets
+          </button>
         </div>
+
+      </div>
+    </div>
+
+    <!-- 4. MODAL: COMMAND PALETTE (⌘K / Ctrl+K) -->
+    <div v-if="showCommandPalette" @click.self="showCommandPalette = false" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-20 animate-fade-in">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200 animate-slide-in">
+        <div class="p-4 border-b border-slate-200 flex items-center space-x-3">
+          <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+          <input 
+            v-model="commandQuery" 
+            type="text" 
+            placeholder="Search commands, navigate tabs, trigger actions..." 
+            class="w-full text-sm font-medium focus:outline-none placeholder-slate-400">
+          <kbd class="px-2 py-0.5 bg-slate-100 rounded text-xs font-mono text-slate-500">ESC</kbd>
+        </div>
+        <div class="p-2 max-h-72 overflow-y-auto space-y-1 text-xs">
+          <button @click="executeCommand('form')" class="w-full p-2.5 rounded-xl hover:bg-slate-100 text-left flex items-center justify-between">
+            <span class="font-medium text-slate-800"><i class="fa-solid fa-file-signature text-brand-500 w-5"></i> Open Active Loan Form</span>
+            <span class="text-[10px] text-slate-400 font-mono">View</span>
+          </button>
+          <button @click="executeCommand('assets')" class="w-full p-2.5 rounded-xl hover:bg-slate-100 text-left flex items-center justify-between">
+            <span class="font-medium text-slate-800"><i class="fa-solid fa-boxes-stacked text-sky-500 w-5"></i> Browse Master Asset Catalog</span>
+            <span class="text-[10px] text-slate-400 font-mono">View</span>
+          </button>
+          <button @click="executeCommand('return')" class="w-full p-2.5 rounded-xl hover:bg-slate-100 text-left flex items-center justify-between">
+            <span class="font-medium text-slate-800"><i class="fa-solid fa-arrow-rotate-left text-emerald-500 w-5"></i> Trigger Equipment Return Modal</span>
+            <span class="text-[10px] text-slate-400 font-mono">Action</span>
+          </button>
+          <button @click="executeCommand('api')" class="w-full p-2.5 rounded-xl hover:bg-slate-100 text-left flex items-center justify-between">
+            <span class="font-medium text-slate-800"><i class="fa-solid fa-code text-amber-500 w-5"></i> Inspect Frappe REST API Payloads</span>
+            <span class="text-[10px] text-slate-400 font-mono">Developer</span>
+          </button>
+          <button @click="executeCommand('voucher')" class="w-full p-2.5 rounded-xl hover:bg-slate-100 text-left flex items-center justify-between">
+            <span class="font-medium text-slate-800"><i class="fa-solid fa-print text-teal-500 w-5"></i> Generate Printable Loan Voucher</span>
+            <span class="text-[10px] text-slate-400 font-mono">Print</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. MODAL: PRINTABLE ENTERPRISE LOAN VOUCHER -->
+    <div v-if="showVoucherModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 space-y-6 animate-slide-in border border-slate-200">
+        
+        <!-- Voucher Header -->
+        <div class="flex items-center justify-between border-b pb-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold">F</div>
+            <div>
+              <h2 class="text-base font-extrabold text-slate-900 uppercase tracking-tight">IT Hardware Custody Slip & Voucher</h2>
+              <p class="text-xs text-slate-400">Frappe Framework Fleet Management &bull; Official Custody Copy</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs font-bold text-slate-900 font-mono">{{ doc.name }}</div>
+            <div class="text-[10px] text-slate-400">Issue Date: {{ doc.loan_date }}</div>
+          </div>
+        </div>
+
+        <!-- Voucher Details -->
+        <div class="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div>
+            <span class="text-slate-400 text-[10px] uppercase font-bold">Borrower Identity</span>
+            <p class="font-bold text-slate-900 mt-0.5">{{ doc.borrower }}</p>
+            <p class="text-slate-500 text-[11px]">{{ doc.department }} &bull; Cost Center: ENG-CLOUD-01</p>
+          </div>
+          <div>
+            <span class="text-slate-400 text-[10px] uppercase font-bold">Custody Schedule</span>
+            <p class="font-bold text-slate-900 mt-0.5">{{ doc.loan_date }} to {{ doc.expected_return_date }}</p>
+            <p class="text-slate-500 text-[11px]">Duration: {{ loanDurationDays }} Days (Authorized)</p>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="border rounded-xl overflow-hidden">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-100 text-slate-600 font-bold border-b">
+              <tr>
+                <th class="p-2.5">Asset Code</th>
+                <th class="p-2.5">Description</th>
+                <th class="p-2.5">Serial No</th>
+                <th class="p-2.5 text-right">Replacement Value</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y font-medium text-slate-800">
+              <tr v-for="item in doc.items" :key="item.asset">
+                <td class="p-2.5 font-mono">{{ item.asset }}</td>
+                <td class="p-2.5">{{ item.asset_name }}</td>
+                <td class="p-2.5 font-mono text-[11px]">{{ item.serial_no }}</td>
+                <td class="p-2.5 text-right font-mono">${{ (item.value || 0).toFixed(2) }}</td>
+              </tr>
+            </tbody>
+            <tfoot class="bg-slate-50 font-bold border-t">
+              <tr>
+                <td colspan="3" class="p-2.5 text-right">Total Insured Value:</td>
+                <td class="p-2.5 text-right font-mono text-brand-600">${{ totalValue.toFixed(2) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Signature Lines -->
+        <div class="grid grid-cols-2 gap-8 pt-4 border-t text-xs">
+          <div>
+            <div class="border-b border-slate-300 pb-8 text-slate-400 text-[10px]">Borrower Signature:</div>
+            <p class="font-semibold text-slate-700 mt-1.5">{{ doc.borrower.split(' - ')[1] || doc.borrower }}</p>
+          </div>
+          <div>
+            <div class="border-b border-slate-300 pb-8 text-slate-400 text-[10px]">IT Fleet Authority Signature:</div>
+            <p class="font-semibold text-slate-700 mt-1.5">Srikrishna RG (IT Admin)</p>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-3">
+          <button @click="showVoucherModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Close</button>
+          <button @click="triggerPrint" class="px-4 py-2 text-xs font-bold bg-slate-900 text-white rounded-xl hover:bg-slate-800 shadow-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-print"></i> Print Voucher
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 6. DRAWER: LIVE REST API & NETWORK INSPECTOR -->
+    <div v-if="showApiInspector" class="fixed inset-y-0 right-0 w-full max-w-lg bg-slate-950 text-slate-200 z-50 shadow-2xl p-6 flex flex-col justify-between border-l border-slate-800 animate-slide-in">
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div class="flex items-center space-x-2.5">
+            <i class="fa-solid fa-terminal text-amber-400"></i>
+            <h3 class="text-sm font-bold text-white font-mono">Frappe REST API Console</h3>
+          </div>
+          <button @click="showApiInspector = false" class="text-slate-400 hover:text-white">&times;</button>
+        </div>
+
+        <div class="mt-4 space-y-4 text-xs font-mono">
+          <div>
+            <span class="text-slate-500 text-[10px] uppercase">Active Endpoint</span>
+            <div class="p-2.5 bg-slate-900 rounded-xl text-emerald-400 mt-1 border border-slate-800 flex items-center justify-between">
+              <span>POST /api/method/loan_api.process_return</span>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">200 OK</span>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-slate-500 text-[10px] uppercase">Request Payload (JSON)</span>
+            <pre class="p-3 bg-slate-900 rounded-xl text-slate-300 mt-1 overflow-x-auto text-[11px] border border-slate-800 leading-relaxed">{{ JSON.stringify({
+  loan_id: doc.name,
+  actual_return_date: doc.actual_return_date || "2026-09-22",
+  return_notes: doc.return_notes || "Inspected and operational"
+}, null, 2) }}</pre>
+          </div>
+
+          <div>
+            <span class="text-slate-500 text-[10px] uppercase">Response Payload (JSON)</span>
+            <pre class="p-3 bg-slate-900 rounded-xl text-indigo-300 mt-1 overflow-x-auto text-[11px] border border-slate-800 leading-relaxed">{{ JSON.stringify({
+  status: "success",
+  message: "Equipment Loan " + doc.name + " marked as Returned",
+  updated_assets: doc.items.map(i => i.asset),
+  new_asset_status: "Available"
+}, null, 2) }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400 font-mono">
+        <span>Latency: 42ms</span>
+        <button @click="showApiInspector = false" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition">Close Inspector</button>
+      </div>
+    </div>
+
+    <!-- 7. DRAWER: QUICK ADD HARDWARE ASSET PICKER -->
+    <div v-if="showQuickAssetDrawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white z-50 shadow-2xl p-6 flex flex-col justify-between border-l border-slate-200 animate-slide-in">
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Add Equipment to Loan</h3>
+            <p class="text-xs text-slate-400">Select available asset from catalog</p>
+          </div>
+          <button @click="showQuickAssetDrawer = false" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        </div>
+
+        <div class="mt-4 space-y-3 max-h-[70vh] overflow-y-auto">
+          <div 
+            v-for="asset in availableCatalogItems" 
+            :key="asset.name" 
+            @click="addSpecificAsset(asset)" 
+            class="p-3.5 rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/20 cursor-pointer transition flex items-center justify-between group">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-brand-100 group-hover:text-brand-600 transition">
+                <i :class="asset.icon"></i>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-slate-800">{{ asset.asset_name }}</h4>
+                <p class="text-[11px] font-mono text-slate-400">{{ asset.name }} &bull; {{ asset.serial_no }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-bold font-mono text-slate-900">${{ asset.replacement_value }}</span>
+              <div class="text-[10px] text-emerald-600 font-semibold">Available</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t">
+        <button @click="showQuickAssetDrawer = false" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl">Done</button>
+      </div>
+    </div>
+
+    <!-- 8. TOAST NOTIFICATION STACK (MAANG LINEAR/STRIPE STYLE) -->
+    <div class="fixed bottom-6 right-6 z-50 space-y-3 pointer-events-none">
+      <div 
+        v-for="toast in toasts" 
+        :key="toast.id" 
+        class="pointer-events-auto p-4 bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-800 flex items-center space-x-3 max-w-sm animate-slide-in">
+        <div :class="toast.badgeClass" class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-sm">
+          <i :class="toast.icon"></i>
+        </div>
+        <div class="flex-1 pr-2">
+          <p class="text-xs font-bold">{{ toast.title }}</p>
+          <p class="text-[11px] text-slate-300 mt-0.5 leading-snug">{{ toast.message }}</p>
+        </div>
+        <button @click="removeToast(toast.id)" class="text-slate-400 hover:text-white">&times;</button>
       </div>
     </div>
 
   </div>
 
+  <!-- VUE 3 APPLICATION CORE REACTIVITY -->
   <script>
-    const { createApp, ref, computed } = Vue;
+    const { createApp, ref, computed, onMounted } = Vue;
 
     createApp({
       setup() {
+        const sidebarOpen = ref(true);
+        const activeView = ref('form');
+        const showReturnModal = ref(false);
+        const showCommandPalette = ref(false);
+        const showVoucherModal = ref(false);
+        const showApiInspector = ref(false);
+        const showQuickAssetDrawer = ref(false);
+        const notificationsOpen = ref(false);
+        const unreadNotifications = ref(2);
+        const commandQuery = ref('');
+        const inventorySearch = ref('');
+
+        // Master Asset Catalog
+        const assetCatalog = ref([
+          { name: "AST-001", asset_name: 'MacBook Pro 16" M3 Max', serial_no: "MBP-M3-9901", status: "Available", replacement_value: 3499.00, category: "Laptop", icon: "fa-solid fa-laptop" },
+          { name: "AST-002", asset_name: 'Apple Studio Display 27" 5K', serial_no: "MN-4K-2210", status: "Available", replacement_value: 1599.00, category: "Monitor", icon: "fa-solid fa-desktop" },
+          { name: "AST-003", asset_name: 'Magic Keyboard & Mouse Kit', serial_no: "KM-KIT-102", status: "Available", replacement_value: 299.00, category: "Peripherals", icon: "fa-solid fa-keyboard" },
+          { name: "AST-004", asset_name: 'Sony FX3 Cinema Camera Kit', serial_no: "DL-6K-4001", status: "Loaned Out", replacement_value: 2199.00, category: "AV Equipment", icon: "fa-solid fa-camera" },
+          { name: "AST-005", asset_name: 'Lenovo ThinkPad X1 Carbon Gen 12', serial_no: "TP-X1-8841", status: "Available", replacement_value: 1899.00, category: "Laptop", icon: "fa-solid fa-laptop" },
+          { name: "AST-006", asset_name: 'iPad Pro 13" M4 with Apple Pencil', serial_no: "IPD-M4-0029", status: "Available", replacement_value: 1299.00, category: "Tablet", icon: "fa-solid fa-tablet-screen-button" }
+        ]);
+
+        // Active Loan Document State
         const doc = ref({
           name: "LOAN-2026-00042",
           borrower: "EMP-00104 - Alex Mercer",
           department: "Cloud Engineering",
+          purpose: "Q4 Remote Cloud Infrastructure Deployment Sprint",
           loan_date: "2026-09-21",
           expected_return_date: "2026-10-05",
           actual_return_date: null,
@@ -235,84 +1192,227 @@
           docstatus: 0,
           return_notes: "",
           items: [
-            { asset: "AST-001", asset_name: "MacBook Pro 16\" M3 Max", serial_no: "MBP-M3-9901", condition: "Good", value: 3499.00 },
-            { asset: "AST-002", asset_name: "Apple Studio Display 27\"", serial_no: "MN-4K-2210", condition: "New", value: 1599.00 }
+            { asset: "AST-001", asset_name: 'MacBook Pro 16" M3 Max', serial_no: "MBP-M3-9901", category: "Laptop", condition: "Brand New", value: 3499.00 },
+            { asset: "AST-002", asset_name: 'Apple Studio Display 27" 5K', serial_no: "MN-4K-2210", category: "Monitor", condition: "Good", value: 1599.00 }
           ]
         });
 
-        const alertMessage = ref("Document initialized in Draft status. You can edit rows or click Submit.");
-        const showReturnDialog = ref(false);
         const returnForm = ref({
           return_date: new Date().toISOString().split('T')[0],
-          notes: "Returned via IT Helpdesk. Inspected and verified in perfect operational condition."
+          grade: "Excellent",
+          notes: "Returned via IT Service Desk. All cables and accessories physically verified in perfect operational condition."
         });
 
+        // Toast stack
+        const toasts = ref([]);
+        function pushToast(title, message, icon = 'fa-solid fa-circle-check', badgeClass = 'bg-emerald-500 text-white') {
+          const id = Date.now();
+          toasts.value.push({ id, title, message, icon, badgeClass });
+          setTimeout(() => removeToast(id), 5000);
+        }
+        function removeToast(id) {
+          toasts.value = toasts.value.filter(t => t.id !== id);
+        }
+
+        // Activity Feed
+        const activityFeed = ref([
+          { id: 1, title: "Loan initialized in Draft", time: "10 mins ago", icon: "fa-solid fa-file", badgeClass: "bg-slate-100 text-slate-600" },
+          { id: 2, title: "Borrower identity verified (Alex Mercer)", time: "8 mins ago", icon: "fa-solid fa-user-check", badgeClass: "bg-blue-100 text-blue-600" },
+          { id: 3, title: "Assets AST-001 & AST-002 staged", time: "5 mins ago", icon: "fa-solid fa-box", badgeClass: "bg-indigo-100 text-indigo-600" }
+        ]);
+
+        // Computed Properties
         const totalValue = computed(() => {
-          return doc.value.items.reduce((sum, item) => sum + (item.value || 0), 0);
+          return doc.value.items.reduce((acc, it) => acc + (Number(it.value) || 0), 0);
+        });
+
+        const loanDurationDays = computed(() => {
+          if (!doc.value.loan_date || !doc.value.expected_return_date) return 0;
+          const d1 = new Date(doc.value.loan_date);
+          const d2 = new Date(doc.value.expected_return_date);
+          const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+          return diff >= 0 ? diff : 0;
+        });
+
+        const hasOverdueBorrower = computed(() => {
+          return doc.value.borrower.includes("EMP-00105");
         });
 
         const statusBadgeClass = computed(() => {
-          if (doc.value.status === 'Draft') return 'bg-gray-100 text-gray-700 border border-gray-200';
-          if (doc.value.status === 'Active') return 'bg-green-100 text-green-800 border border-green-200';
-          if (doc.value.status === 'Returned') return 'bg-blue-100 text-blue-800 border border-blue-200';
-          return 'bg-red-100 text-red-800 border border-red-200';
+          if (doc.value.status === 'Draft') return 'bg-amber-50 text-amber-800 border-amber-200 badge-glow-amber';
+          if (doc.value.status === 'Active') return 'bg-blue-50 text-blue-800 border-blue-200 badge-glow-blue';
+          if (doc.value.status === 'Returned') return 'bg-emerald-50 text-emerald-800 border-emerald-200 badge-glow-emerald';
+          return 'bg-rose-50 text-rose-800 border-rose-200';
         });
 
         const statusDotClass = computed(() => {
-          if (doc.value.status === 'Draft') return 'bg-gray-400';
-          if (doc.value.status === 'Active') return 'bg-green-500';
-          if (doc.value.status === 'Returned') return 'bg-blue-500';
-          return 'bg-red-500';
+          if (doc.value.status === 'Draft') return 'bg-amber-500';
+          if (doc.value.status === 'Active') return 'bg-blue-500 animate-pulse';
+          if (doc.value.status === 'Returned') return 'bg-emerald-500';
+          return 'bg-rose-500';
         });
 
-        function onAssetSelect(item) {
-          if (item.asset === 'AST-001') {
-            item.asset_name = 'MacBook Pro 16" M3 Max';
-            item.serial_no = 'MBP-M3-9901';
-            item.value = 3499.00;
-          } else if (item.asset === 'AST-002') {
-            item.asset_name = 'Apple Studio Display 27"';
-            item.serial_no = 'MN-4K-2210';
-            item.value = 1599.00;
+        const filteredAssets = computed(() => {
+          if (!inventorySearch.value) return assetCatalog.value;
+          const q = inventorySearch.value.toLowerCase();
+          return assetCatalog.value.filter(a => a.asset_name.toLowerCase().includes(q) || a.serial_no.toLowerCase().includes(q) || a.name.toLowerCase().includes(q));
+        });
+
+        const availableCatalogItems = computed(() => {
+          const currentAssetIds = new Set(doc.value.items.map(i => i.asset));
+          return assetCatalog.value.filter(a => a.status === 'Available' && !currentAssetIds.has(a.name));
+        });
+
+        function availableAssetOptions(currentAsset) {
+          const currentAssetIds = new Set(doc.value.items.map(i => i.asset).filter(id => id !== currentAsset));
+          return assetCatalog.value.filter(a => !currentAssetIds.has(a.name));
+        }
+
+        function getAssetIcon(assetCode) {
+          const found = assetCatalog.value.find(a => a.name === assetCode);
+          return found ? found.icon : 'fa-solid fa-microchip';
+        }
+
+        // Methods
+        function onBorrowerChange() {
+          if (doc.value.borrower.includes("EMP-00104")) {
+            doc.value.department = "Cloud Engineering";
+            pushToast("Borrower Validated", "Alex Mercer is cleared with 0 overdue items.", "fa-solid fa-user-check", "bg-emerald-500 text-white");
+          } else if (doc.value.borrower.includes("EMP-00105")) {
+            doc.value.department = "Design Systems";
+            pushToast("Eligibility Lockout!", "EMP-00105 has an overdue loan (LOAN-2026-00008). Submissions are blocked.", "fa-solid fa-triangle-exclamation", "bg-rose-500 text-white");
           } else {
-            item.asset_name = 'Magic Keyboard & Mouse Kit';
-            item.serial_no = 'KM-KIT-102';
-            item.value = 299.00;
+            doc.value.department = "DevOps & SRE";
+            pushToast("Borrower Validated", "Maya Lin is in good standing.", "fa-solid fa-user-check", "bg-emerald-500 text-white");
           }
         }
 
-        function addRow() {
+        function selectBorrower(empCode) {
+          if (empCode === 'EMP-00104') {
+            doc.value.borrower = "EMP-00104 - Alex Mercer";
+            onBorrowerChange();
+          }
+        }
+
+        function fixReturnDate() {
+          const start = new Date(doc.value.loan_date);
+          start.setDate(start.getDate() + 14);
+          doc.value.expected_return_date = start.toISOString().split('T')[0];
+          pushToast("Date SLA Corrected", "Return date set to 14 days, compliant with 30-day corporate policy.", "fa-solid fa-calendar-check", "bg-sky-500 text-white");
+        }
+
+        function validateDates() {
+          if (loanDurationDays.value > 30) {
+            pushToast("Policy Warning", "Duration is " + loanDurationDays.value + " days. Corporate SLA limit is 30 days.", "fa-solid fa-clock", "bg-amber-500 text-white");
+          }
+        }
+
+        function onAssetChange(item, idx) {
+          const assetInfo = assetCatalog.value.find(a => a.name === item.asset);
+          if (assetInfo) {
+            item.asset_name = assetInfo.asset_name;
+            item.serial_no = assetInfo.serial_no;
+            item.category = assetInfo.category;
+            item.value = assetInfo.replacement_value;
+            pushToast("Item Updated", `Allocated ${assetInfo.asset_name} ($${assetInfo.replacement_value})`);
+          }
+        }
+
+        function openQuickAssetDrawer() {
+          showQuickAssetDrawer.value = true;
+        }
+
+        function addSpecificAsset(asset) {
           doc.value.items.push({
-            asset: "AST-003",
-            asset_name: "Magic Keyboard & Mouse Kit",
-            serial_no: "KM-KIT-102",
+            asset: asset.name,
+            asset_name: asset.asset_name,
+            serial_no: asset.serial_no,
+            category: asset.category,
             condition: "Good",
-            value: 299.00
+            value: asset.replacement_value
           });
+          showQuickAssetDrawer.value = false;
+          pushToast("Item Added", `${asset.asset_name} attached to loan table.`, "fa-solid fa-check", "bg-brand-600 text-white");
+        }
+
+        function addAssetToLoan(asset) {
+          activeView.value = 'form';
+          addSpecificAsset(asset);
         }
 
         function removeRow(idx) {
+          const removed = doc.value.items[idx];
           doc.value.items.splice(idx, 1);
+          pushToast("Item Removed", `${removed.asset_name} unallocated.`);
         }
 
+        // Submittable Document Controller Actions
         function submitDoc() {
+          if (hasOverdueBorrower.value) {
+            pushToast("Submission Rejected!", "Borrower has active overdue equipment loans.", "fa-solid fa-lock", "bg-rose-600 text-white");
+            return;
+          }
+          if (doc.value.items.length === 0) {
+            pushToast("Validation Error", "At least one hardware item must be added.", "fa-solid fa-exclamation", "bg-rose-600 text-white");
+            return;
+          }
+
           doc.value.docstatus = 1;
           doc.value.status = "Active";
-          alertMessage.value = "Loan LOAN-2026-00042 has been SUBMITTED! Allocated hardware items are now marked as 'Loaned Out' in inventory.";
+
+          // Flip catalog status to 'Loaned Out'
+          doc.value.items.forEach(item => {
+            const match = assetCatalog.value.find(a => a.name === item.asset);
+            if (match) match.status = "Loaned Out";
+          });
+
+          pushToast("Document Submitted!", "Loan LOAN-2026-00042 is now ACTIVE. Inventory locks applied.", "fa-solid fa-paper-plane", "bg-blue-600 text-white");
+          activityFeed.value.unshift({
+            id: Date.now(),
+            title: `Submitted LOAN-2026-00042 ($${totalValue.value.toFixed(2)})`,
+            time: "Just now",
+            icon: "fa-solid fa-paper-plane",
+            badgeClass: "bg-blue-100 text-blue-700"
+          });
+        }
+
+        function openReturnModal() {
+          showReturnModal.value = true;
         }
 
         function confirmReturn() {
-          showReturnDialog.value = false;
+          showReturnModal.value = false;
           doc.value.status = "Returned";
           doc.value.actual_return_date = returnForm.value.return_date;
           doc.value.return_notes = returnForm.value.notes;
-          alertMessage.value = "Hardware items verified and returned successfully! Assets are now released and available for lending.";
+
+          // Revert assets to 'Available'
+          doc.value.items.forEach(item => {
+            const match = assetCatalog.value.find(a => a.name === item.asset);
+            if (match) match.status = "Available";
+          });
+
+          pushToast("Return Verified!", "Hardware verified & catalog status updated to 'Available'.", "fa-solid fa-circle-check", "bg-emerald-600 text-white");
+          activityFeed.value.unshift({
+            id: Date.now(),
+            title: `Equipment returned & inspected (${doc.value.name})`,
+            time: "Just now",
+            icon: "fa-solid fa-arrow-rotate-left",
+            badgeClass: "bg-emerald-100 text-emerald-700"
+          });
         }
 
         function cancelDoc() {
           doc.value.docstatus = 2;
           doc.value.status = "Cancelled";
-          alertMessage.value = "Loan has been CANCELLED. All item reservations have been reversed.";
+
+          // Revert assets to 'Available'
+          doc.value.items.forEach(item => {
+            const match = assetCatalog.value.find(a => a.name === item.asset);
+            if (match) match.status = "Available";
+          });
+
+          pushToast("Document Cancelled", "Loan cancelled. Asset reservations reversed.", "fa-solid fa-ban", "bg-rose-600 text-white");
         }
 
         function resetDemo() {
@@ -320,24 +1420,114 @@
           doc.value.status = "Draft";
           doc.value.actual_return_date = null;
           doc.value.return_notes = "";
-          alertMessage.value = "Reset to initial state.";
+          doc.value.borrower = "EMP-00104 - Alex Mercer";
+          doc.value.department = "Cloud Engineering";
+          doc.value.items = [
+            { asset: "AST-001", asset_name: 'MacBook Pro 16" M3 Max', serial_no: "MBP-M3-9901", category: "Laptop", condition: "Brand New", value: 3499.00 },
+            { asset: "AST-002", asset_name: 'Apple Studio Display 27" 5K', serial_no: "MN-4K-2210", category: "Monitor", condition: "Good", value: 1599.00 }
+          ];
+          assetCatalog.value.forEach(a => {
+            if (a.name === 'AST-004') a.status = 'Loaned Out';
+            else a.status = 'Available';
+          });
+          pushToast("Demo Reset", "Prototype restored to initial Draft state.", "fa-solid fa-rotate", "bg-slate-700 text-white");
         }
 
+        function copyDocName() {
+          navigator.clipboard?.writeText(doc.value.name);
+          pushToast("Copied to Clipboard", doc.value.name, "fa-regular fa-copy", "bg-slate-800 text-white");
+        }
+
+        function copyText(txt) {
+          navigator.clipboard?.writeText(txt);
+          pushToast("Copied", txt, "fa-regular fa-copy", "bg-slate-800 text-white");
+        }
+
+        function triggerPrint() {
+          window.print();
+        }
+
+        function executeCommand(cmd) {
+          showCommandPalette.value = false;
+          if (cmd === 'form') activeView.value = 'form';
+          if (cmd === 'assets') activeView.value = 'assets';
+          if (cmd === 'return') {
+            activeView.value = 'form';
+            if (doc.value.status === 'Active') openReturnModal();
+            else pushToast("Notice", "Submit the loan first before processing return.", "fa-solid fa-info", "bg-amber-500 text-white");
+          }
+          if (cmd === 'api') showApiInspector.value = true;
+          if (cmd === 'voucher') showVoucherModal.value = true;
+        }
+
+        function toggleNotifications() {
+          notificationsOpen.value = !notificationsOpen.value;
+          if (notificationsOpen.value) unreadNotifications.value = 0;
+        }
+
+        // Global keyboard shortcut for Command Palette
+        onMounted(() => {
+          window.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+              e.preventDefault();
+              showCommandPalette.value = !showCommandPalette.value;
+            }
+            if (e.key === 'Escape') {
+              showCommandPalette.value = false;
+              showReturnModal.value = false;
+              showVoucherModal.value = false;
+              showApiInspector.value = false;
+              showQuickAssetDrawer.value = false;
+            }
+          });
+        });
+
         return {
+          sidebarOpen,
+          activeView,
+          showReturnModal,
+          showCommandPalette,
+          showVoucherModal,
+          showApiInspector,
+          showQuickAssetDrawer,
+          notificationsOpen,
+          unreadNotifications,
+          commandQuery,
+          inventorySearch,
+          assetCatalog,
           doc,
-          alertMessage,
-          showReturnDialog,
           returnForm,
+          toasts,
+          activityFeed,
           totalValue,
+          loanDurationDays,
+          hasOverdueBorrower,
           statusBadgeClass,
           statusDotClass,
-          onAssetSelect,
-          addRow,
+          filteredAssets,
+          availableCatalogItems,
+          availableAssetOptions,
+          getAssetIcon,
+          onBorrowerChange,
+          selectBorrower,
+          fixReturnDate,
+          validateDates,
+          onAssetChange,
+          openQuickAssetDrawer,
+          addSpecificAsset,
+          addAssetToLoan,
           removeRow,
           submitDoc,
+          openReturnModal,
           confirmReturn,
           cancelDoc,
-          resetDemo
+          resetDemo,
+          copyDocName,
+          copyText,
+          triggerPrint,
+          executeCommand,
+          toggleNotifications,
+          removeToast
         };
       }
     }).mount('#app');
