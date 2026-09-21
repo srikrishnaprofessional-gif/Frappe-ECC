@@ -203,7 +203,8 @@ python bin/frappe-shield.py path/to/your/frappe_app
 
 ---
 
-### Master Architecture & System Specifications
+### Master Executive Deliverables & System Specifications
+- **Master Executive Deliverables Report**: [FRAPPE_AES_MASTER_PROJECT_DELIVERABLES_REPORT.md](docs/FRAPPE_AES_MASTER_PROJECT_DELIVERABLES_REPORT.md)
 - **Master High-Level Design (HLD)**: [FRAPPE_AES_HLD_ARCHITECTURE.md](docs/FRAPPE_AES_HLD_ARCHITECTURE.md)
 - **Master Low-Level Design (LLD)**: [FRAPPE_AES_LLD_SPECIFICATION.md](docs/FRAPPE_AES_LLD_SPECIFICATION.md)
 - **Commercial Pitch Deck (Investor & Enterprise)**: [FRAPPE_AES_COMMERCIAL_PITCH_DECK.md](docs/FRAPPE_AES_COMMERCIAL_PITCH_DECK.md)
