@@ -38,15 +38,15 @@ It covers the complete engineering lifecycle: **HLD/LLD Architecture**, **UI/UX 
 
 | Component | Count | Description |
 |---|---|---|
-| **Agents** | 28 | Autonomous & specialist AI workers: Orchestration, Product Management, HLD, LLD, UI/UX, Wireframing, Prototyping, Fullstack Dev, TDD, Manual QA, Playwright Testing, Self-Healing Debugger, Data Synthesis, RBAC Compliance, Integrations Broker, Print Formats, DevOps, Security |
+| **Agents** | 29 | Autonomous & specialist AI workers: Orchestration, Product Management, HLD, LLD, UI/UX, Wireframing, Prototyping, Fullstack Dev, TDD, Manual QA, Playwright Testing, Self-Healing Debugger, Data Synthesis, RBAC Compliance, Integrations Broker, Print Formats, DevOps, Security, Working SOP Author |
 | **Skills** | 18 | Production workflows: HLD/LLD design, Wireframing & Prototyping, QA test automation, Turnkey scaffolding, DocType modeling, QueryBuilder, `hooks.py`, client scripts, REST APIs, permissions, TDD, background jobs, reports, patches, Bench CLI, Frappe UI, Portal |
-| **Commands** | 26 | Slash commands: `/frappe:auto`, `/frappe:heal`, `/frappe:fixtures`, `/frappe:rbac`, `/frappe:print-format`, `/frappe:deploy`, `/frappe:hld`, `/frappe:lld`, `/frappe:wireframe`, `/frappe:prototype`, `/frappe:build-e2e`, `/frappe:manual-qa`, `/frappe:e2e-test`, `/frappe:plan`, `/frappe:doctype`, `/frappe:controller`, `/frappe:test`, `/frappe:security`, `/frappe:bench`, etc. |
+| **Commands** | 27 | Slash commands: `/frappe:auto`, `/frappe:sop`, `/frappe:heal`, `/frappe:fixtures`, `/frappe:rbac`, `/frappe:print-format`, `/frappe:deploy`, `/frappe:hld`, `/frappe:lld`, `/frappe:wireframe`, `/frappe:prototype`, `/frappe:build-e2e`, `/frappe:manual-qa`, `/frappe:e2e-test`, `/frappe:plan`, `/frappe:doctype`, `/frappe:controller`, `/frappe:test`, `/frappe:security`, `/frappe:bench`, etc. |
 | **Rules** | 5 | Always-loaded coding standards: Core architecture, Python backend, Desk JS, Security, and Database optimization |
 | **Frappe Shield** | Included | AST-based static security analyzer detecting SQLi in `frappe.db.sql`, `commit()` violations, and unvalidated guest APIs |
 
 ---
 
-## 🛠️ The 28 Autonomous & Specialist Agents
+## 🛠️ The 29 Autonomous & Specialist Agents
 
 | Agent | Responsibility |
 |---|---|
@@ -78,6 +78,7 @@ It covers the complete engineering lifecycle: **HLD/LLD Architecture**, **UI/UX 
 | `frappe-api-integrator` | REST APIs, webhook listeners & OAuth2 client integration |
 | `frappe-release-devops` | CI/CD GitHub Actions workflows, Dockerfiles & Frappe Cloud deployment |
 | `frappe-doc-updater` | Auto-documentation for DocTypes, APIs & hooks registries |
+| `frappe-working-sop-author` | Visual Working SOPs & operator manuals with embedded UI screenshots, RACI & failsafes |
 
 ---
 
@@ -98,6 +99,9 @@ python bin/frappe-shield.py path/to/your/frappe_app
 - **Multi-Agent Architecture & Pipeline Spec**: [FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.md](docs/FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.md)
 - **Architecture Spec Word Document**: [FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.docx](docs/FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.docx)
 - **Architecture Spec PDF Document**: [FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.pdf](docs/FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.pdf)
-- **Standard Operating Procedure (SOP)**: [FRAPPE_ECC_SOP.md](docs/FRAPPE_ECC_SOP.md)
-- **SOP Word Document**: [FRAPPE_ECC_SOP.docx](docs/FRAPPE_ECC_SOP.docx)
-- **SOP PDF Document**: [FRAPPE_ECC_SOP.pdf](docs/FRAPPE_ECC_SOP.pdf)
+- **Framework Standard Operating Procedure (SOP)**: [FRAPPE_ECC_SOP.md](docs/FRAPPE_ECC_SOP.md)
+- **Framework SOP Word Document**: [FRAPPE_ECC_SOP.docx](docs/FRAPPE_ECC_SOP.docx)
+- **Framework SOP PDF Document**: [FRAPPE_ECC_SOP.pdf](docs/FRAPPE_ECC_SOP.pdf)
+- **Project Working SOP with Screenshots (Equipment Loan)**: [WORKING_SOP_EQUIPMENT_LOAN.md](test_project/docs/WORKING_SOP_EQUIPMENT_LOAN.md)
+- **Project Working SOP Word Document**: [WORKING_SOP_EQUIPMENT_LOAN.docx](test_project/docs/WORKING_SOP_EQUIPMENT_LOAN.docx)
+- **Project Working SOP PDF Document**: [WORKING_SOP_EQUIPMENT_LOAN.pdf](test_project/docs/WORKING_SOP_EQUIPMENT_LOAN.pdf)
