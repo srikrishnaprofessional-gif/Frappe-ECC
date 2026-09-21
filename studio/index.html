@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Frappe Autonomous Enterprise Studio (Frappe AES)</title>
+  
+  <!-- PWA & Mobile Optimization for iOS & Windows -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Frappe AES">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="../installers/ios/manifest.json">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/frappe/frappe/develop/frappe/public/images/frappe-framework-logo.png">
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Vue 3 & FontAwesome Icons -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #0d9488;
+      --primary-hover: #0f766e;
+      --primary-light: rgba(13, 148, 136, 0.15);
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-border: #1f293d;
+      --card-bg: rgba(17, 24, 39, 0.7);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient Glow Background */
+    .glow-layer {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 15% 15%, rgba(13, 148, 136, 0.12) 0%, transparent 45%),
+                  radial-gradient(circle at 85% 25%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+                  radial-gradient(circle at 50% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top Glass Navbar */
+    .top-navbar {
+      height: 68px;
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-logo i {
+      color: var(--primary);
+      font-size: 1.5rem;
+    }
+
+    .badge-pill {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: var(--primary-light);
+      color: #2dd4bf;
+      border: 1px solid rgba(45, 212, 191, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background-color: #2dd4bf;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(45, 212, 191, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(45, 212, 191, 0); }
+    }
+
+    /* Layout Main Grid */
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 480px 1fr;
+      flex: 1;
+      height: calc(100vh - 68px);
+      overflow: hidden;
+    }
+
+    @media (max-width: 1024px) {
+      .studio-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+    }
+
+    /* Left Console */
+    .left-console {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--surface-border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Ingestion Mode Tabs */
+    .mode-tabs {
+      display: flex;
+      background: #0b1120;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--surface-border);
+      gap: 4px;
+    }
+
+    .mode-tab {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .mode-tab.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(13, 148, 136, 0.4);
+    }
+
+    /* Input Box */
+    .prompt-textarea {
+      width: 100%;
+      height: 120px;
+      background: #0b1120;
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 14px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .prompt-textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
+    }
+
+    /* Quick Prompt Pills */
+    .quick-prompts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .prompt-pill {
+      font-size: 0.75rem;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--surface-border);
+      padding: 5px 12px;
+      border-radius: 9999px;
+      cursor: pointer;
+      color: #cbd5e1;
+      transition: all 0.2s;
+    }
+
+    .prompt-pill:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: #2dd4bf;
+    }
+
+    /* Action Button */
+    .btn-synthesize {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+      border: none;
+      border-radius: 12px;
+      color: #ffffff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 15px rgba(13, 148, 136, 0.35);
+      transition: all 0.2s;
+    }
+
+    .btn-synthesize:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(13, 148, 136, 0.5);
+    }
+
+    /* Live Agent Execution Pipeline */
+    .pipeline-card {
+      background: #0b1120;
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: all 0.3s;
+    }
+
+    .pipeline-step.active {
+      color: #2dd4bf;
+      font-weight: 600;
+    }
+
+    .pipeline-step.completed {
+      color: #10b981;
+    }
+
+    .step-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+
+    .pipeline-step.active .step-icon {
+      background: var(--primary);
+      color: #fff;
+      animation: pulse 1.5s infinite;
+    }
+
+    .pipeline-step.completed .step-icon {
+      background: var(--success);
+      color: #fff;
+    }
+
+    /* Right Preview Stage */
+    .right-stage {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      background: rgba(9, 13, 22, 0.5);
+    }
+
+    .stage-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--surface-border);
+      padding-bottom: 12px;
+    }
+
+    .stage-tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .stage-tab {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .stage-tab.active {
+      background: #1e293b;
+      color: #f8fafc;
+    }
+
+    /* Interactive Preview Container */
+    .preview-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      flex: 1;
+    }
+
+    /* Desk Form Component Mockup */
+    .desk-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--surface-border);
+      margin-bottom: 20px;
+    }
+
+    .desk-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .badge-active { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-draft { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: #0b1120;
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 0.88rem;
+    }
+
+    /* Child Table */
+    .child-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+    }
+
+    .child-table th {
+      background: #0b1120;
+      padding: 10px;
+      text-align: left;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .child-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    /* Action Buttons in Desk */
+    .desk-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn-desk {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-secondary { background: #1e293b; color: #f8fafc; border: 1px solid var(--surface-border); }
+    .btn-primary-desk { background: var(--primary); color: #fff; border: none; }
+  </style>
+</head>
+<body>
+  <div class="glow-layer"></div>
+
+  <div id="app" class="app-container">
+    <!-- Top Glass Navigation Bar -->
+    <header class="top-navbar">
+      <div class="brand-logo">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>Frappe AES <span style="font-weight: 400; font-size: 0.85rem; color: #94a3b8;">Autonomous Studio</span></span>
+        <div class="badge-pill">
+          <span class="pulse-dot"></span>
+          <span>52 Agents Active (v2.0)</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <a href="../docs/FRAPPE_NO_CODE_COMMERCIAL_PRODUCT_SPEC.pdf" target="_blank" class="btn-desk btn-secondary" style="text-decoration: none;">
+          <i class="fa-solid fa-file-pdf"></i> Product Spec PDF
+        </a>
+        <button class="btn-desk btn-secondary" @click="exportCode">
+          <i class="fa-solid fa-download"></i> Export Application
+        </button>
+      </div>
+    </header>
+
+    <!-- Studio Workspace Grid -->
+    <main class="studio-grid">
+      <!-- Left Interaction Console -->
+      <aside class="left-console">
+        <div class="section-title">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Multi-Modal No-Code Ingestion</span>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="mode-tabs">
+          <div class="mode-tab" :class="{active: activeMode === 'prompt'}" @click="activeMode = 'prompt'">
+            <i class="fa-solid fa-terminal"></i> Prompt
+          </div>
+          <div class="mode-tab" :class="{active: activeMode === 'sheets'}" @click="activeMode = 'sheets'">
+            <i class="fa-solid fa-file-excel"></i> Excel / CSV
+          </div>
+          <div class="mode-tab" :class="{active: activeMode === 'voice'}" @click="activeMode = 'voice'">
+            <i class="fa-solid fa-microphone"></i> Voice
+          </div>
+          <div class="mode-tab" :class="{active: activeMode === 'ocr'}" @click="activeMode = 'ocr'">
+            <i class="fa-solid fa-file-invoice"></i> OCR Scan
+          </div>
+        </div>
+
+        <!-- Mode 1: Natural Language Prompt -->
+        <div v-if="activeMode === 'prompt'" style="display: flex; flex-direction: column; gap: 12px;">
+          <textarea 
+            class="prompt-textarea" 
+            v-model="userPrompt" 
+            placeholder="Describe your business application in plain English... e.g. 'Build an IT Equipment Loan and Return System with hardware serial verification, 30-day loan limits, and return inspection checklists.'">
+          </textarea>
+
+          <div class="quick-prompts">
+            <span class="prompt-pill" @click="loadPrompt('IT Equipment Loan & Return System')">💻 IT Equipment Loan</span>
+            <span class="prompt-pill" @click="loadPrompt('Fleet Vehicle Rental & Maintenance')">🚗 Fleet Rental</span>
+            <span class="prompt-pill" @click="loadPrompt('Hospital Bed & Patient Admission')">🏥 Hospital Beds</span>
+            <span class="prompt-pill" @click="loadPrompt('B2B Warehouse Inventory & Barcode Checkouts')">📦 B2B Inventory</span>
+          </div>
+        </div>
+
+        <!-- Mode 2: Excel / CSV Ingestor -->
+        <div v-else-if="activeMode === 'sheets'" style="padding: 20px; border: 2px dashed var(--surface-border); border-radius: 12px; text-align: center; cursor: pointer; background: #0b1120;" @click="simulateFileUpload('Legacy_Inventory_Sheet.xlsx')">
+          <i class="fa-solid fa-file-excel" style="font-size: 2.2rem; color: #10b981; margin-bottom: 8px;"></i>
+          <p style="font-weight: 600; font-size: 0.9rem;">Drop Excel (.xlsx) or CSV file</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Auto-normalizes 3NF schemas, foreign keys & child rows</p>
+          <div v-if="uploadedFile" style="margin-top: 10px; font-size: 0.8rem; color: #2dd4bf; font-weight: 600;">
+            <i class="fa-solid fa-check-circle"></i> Ingested: {{ uploadedFile }}
+          </div>
+        </div>
+
+        <!-- Mode 3: Voice Dictation -->
+        <div v-else-if="activeMode === 'voice'" style="padding: 24px; border: 1px solid var(--surface-border); border-radius: 12px; text-align: center; background: #0b1120;">
+          <button @click="toggleVoice" style="width: 56px; height: 56px; border-radius: 50%; background: #0d9488; border: none; color: #fff; font-size: 1.25rem; cursor: pointer; margin-bottom: 12px;">
+            <i :class="isListening ? 'fa-solid fa-stop' : 'fa-solid fa-microphone'"></i>
+          </button>
+          <p style="font-size: 0.85rem; font-weight: 600;">{{ isListening ? 'Listening to voice intent...' : 'Tap mic to speak application requirements' }}</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Spoken speech-to-action engine powered by frappe-voice-command-copilot</p>
+        </div>
+
+        <!-- Mode 4: OCR Scanner -->
+        <div v-else-if="activeMode === 'ocr'" style="padding: 20px; border: 2px dashed var(--surface-border); border-radius: 12px; text-align: center; cursor: pointer; background: #0b1120;" @click="simulateFileUpload('Signed_Custody_Form.pdf')">
+          <i class="fa-solid fa-file-invoice" style="font-size: 2.2rem; color: #6366f1; margin-bottom: 8px;"></i>
+          <p style="font-weight: 600; font-size: 0.9rem;">Scan Paper Form or Invoice (PDF / JPG)</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Extracts line items, signatures, and tax rates via vision OCR</p>
+        </div>
+
+        <!-- Launch Button -->
+        <button class="btn-synthesize" @click="runPipeline" :disabled="isRunning">
+          <i class="fa-solid" :class="isRunning ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
+          <span>{{ isRunning ? 'Autonomous Agents Working...' : 'Synthesize Production App' }}</span>
+        </button>
+
+        <!-- Live 52-Agent Pipeline Progress -->
+        <div class="pipeline-card">
+          <div class="section-title" style="font-size: 0.8rem;">
+            <i class="fa-solid fa-network-wired"></i>
+            <span>Autonomous Pipeline Execution</span>
+          </div>
+
+          <div class="pipeline-step" v-for="(step, idx) in pipelineSteps" :key="idx" :class="step.status">
+            <div class="step-icon">
+              <i v-if="step.status === 'completed'" class="fa-solid fa-check"></i>
+              <i v-else-if="step.status === 'active'" class="fa-solid fa-spinner fa-spin"></i>
+              <span v-else>{{ idx + 1 }}</span>
+            </div>
+            <div>
+              <div style="font-weight: 600; font-size: 0.8rem;">{{ step.name }}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">{{ step.agent }}</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Interactive Preview Stage -->
+      <section class="right-stage">
+        <div class="stage-nav">
+          <div class="stage-tabs">
+            <div class="stage-tab" :class="{active: activeTab === 'form'}" @click="activeTab = 'form'">
+              <i class="fa-solid fa-table-columns"></i> Interactive Form
+            </div>
+            <div class="stage-tab" :class="{active: activeTab === 'bi'}" @click="activeTab = 'bi'">
+              <i class="fa-solid fa-chart-line"></i> BI Dashboard
+            </div>
+            <div class="stage-tab" :class="{active: activeTab === 'sop'}" @click="activeTab = 'sop'">
+              <i class="fa-solid fa-book-open"></i> Working SOP
+            </div>
+            <div class="stage-tab" :class="{active: activeTab === 'code'}" @click="activeTab = 'code'">
+              <i class="fa-solid fa-code"></i> Generated Code
+            </div>
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-muted);">
+            Project: <strong style="color: #2dd4bf;">equipment_loan</strong> (Status: Active)
+          </div>
+        </div>
+
+        <!-- Tab 1: Interactive Desk Form -->
+        <div v-if="activeTab === 'form'" class="preview-card">
+          <div class="desk-header">
+            <div class="desk-title">
+              <i class="fa-solid fa-laptop-file" style="color: #0d9488;"></i>
+              <span>LOAN-2026-00001</span>
+              <span class="status-badge badge-active">Active</span>
+            </div>
+            <div class="desk-actions">
+              <button class="btn-desk btn-secondary" @click="openReturnModal">
+                <i class="fa-solid fa-arrow-rotate-left"></i> Process Return
+              </button>
+              <button class="btn-desk btn-primary-desk" @click="saveRecord">
+                <i class="fa-solid fa-save"></i> Save Record
+              </button>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Borrower (User Link)</label>
+              <input type="text" class="form-input" v-model="formData.borrower">
+            </div>
+            <div class="form-field">
+              <label>Department</label>
+              <input type="text" class="form-input" v-model="formData.department">
+            </div>
+            <div class="form-field">
+              <label>Loan Date</label>
+              <input type="date" class="form-input" v-model="formData.loanDate">
+            </div>
+            <div class="form-field">
+              <label>Scheduled Return Date</label>
+              <input type="date" class="form-input" v-model="formData.returnDate">
+            </div>
+          </div>
+
+          <h4 style="font-size: 0.9rem; margin-bottom: 10px; color: var(--text-muted);">
+            <i class="fa-solid fa-table"></i> Itemized Allocated Hardware (Child Table Grid)
+          </h4>
+
+          <table class="child-table">
+            <thead>
+              <tr>
+                <th>Asset Code</th>
+                <th>Hardware Item</th>
+                <th>Serial Number</th>
+                <th>Replacement Value</th>
+                <th>Condition</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, idx) in formData.items" :key="idx">
+                <td><strong style="color: #2dd4bf;">{{ item.asset }}</strong></td>
+                <td>{{ item.description }}</td>
+                <td><code>{{ item.serial }}</code></td>
+                <td>${{ item.val.toLocaleString() }}</td>
+                <td><span style="color: #10b981;"><i class="fa-solid fa-circle-check"></i> {{ item.cond }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="background: rgba(13, 148, 136, 0.1); border-left: 4px solid #0d9488; padding: 12px; border-radius: 6px; font-size: 0.8rem; display: flex; justify-content: space-between;">
+            <span>Total Replacement Custody Value: <strong>$5,098.00</strong></span>
+            <span>Policy Status: <strong style="color: #10b981;">Compliant (Within 30-Day Window)</strong></span>
+          </div>
+        </div>
+
+        <!-- Tab 2: BI Dashboard -->
+        <div v-else-if="activeTab === 'bi'" class="preview-card">
+          <h3 style="font-family: 'Outfit'; font-size: 1.2rem; margin-bottom: 16px;">
+            <i class="fa-solid fa-chart-pie" style="color: #0d9488;"></i> Executive Loan Operations Dashboard
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px;">
+            <div style="background: #0b1120; padding: 16px; border-radius: 12px; border: 1px solid var(--surface-border);">
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Active Hardware on Loan</div>
+              <div style="font-size: 1.6rem; font-weight: 700; color: #2dd4bf;">24 Units</div>
+              <div style="font-size: 0.72rem; color: #10b981;">▲ 8% from last week</div>
+            </div>
+            <div style="background: #0b1120; padding: 16px; border-radius: 12px; border: 1px solid var(--surface-border);">
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Total Replacement Value</div>
+              <div style="font-size: 1.6rem; font-weight: 700; color: #f8fafc;">$64,820</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Across 18 Active Loans</div>
+            </div>
+            <div style="background: #0b1120; padding: 16px; border-radius: 12px; border: 1px solid var(--surface-border);">
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Overdue Items</div>
+              <div style="font-size: 1.6rem; font-weight: 700; color: #ef4444;">1 Unit</div>
+              <div style="font-size: 0.72rem; color: #f59e0b;">SLA Escalation Dispatched</div>
+            </div>
+          </div>
+          <div style="background: #0b1120; padding: 20px; border-radius: 12px; border: 1px solid var(--surface-border); text-align: center; color: var(--text-muted);">
+            <i class="fa-solid fa-chart-column" style="font-size: 3rem; color: #0d9488; margin-bottom: 12px;"></i>
+            <p style="font-weight: 600;">Real-Time Department Utilization Chart</p>
+            <p style="font-size: 0.78rem;">Engineering (54%) | Product Design (28%) | Sales Operations (18%)</p>
+          </div>
+        </div>
+
+        <!-- Tab 3: Working SOP -->
+        <div v-else-if="activeTab === 'sop'" class="preview-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-family: 'Outfit'; font-size: 1.2rem;">
+              <i class="fa-solid fa-book-open" style="color: #0d9488;"></i> Working SOP: Equipment Loan & Return
+            </h3>
+            <a href="../test_project/docs/WORKING_SOP_EQUIPMENT_LOAN.pdf" target="_blank" class="btn-desk btn-secondary" style="text-decoration: none;">
+              <i class="fa-solid fa-file-pdf"></i> Download PDF SOP
+            </a>
+          </div>
+          <div style="font-size: 0.85rem; line-height: 1.6; color: #cbd5e1;">
+            <p><strong>SOP ID:</strong> SOP-EQP-001 | <strong>Role:</strong> Storekeeper, Borrower, IT Admin</p>
+            <hr style="border-color: var(--surface-border); margin: 12px 0;">
+            <h4 style="color: #2dd4bf; margin: 10px 0 6px;">Procedure 1: Creating a New Equipment Loan Application</h4>
+            <ol style="margin-left: 20px; margin-bottom: 14px;">
+              <li>Navigate to <code>Desk &gt; Equipment Loan &gt; New</code>.</li>
+              <li>Select the <strong>Borrower</strong> (Employee email). System verifies borrower has zero overdue loans.</li>
+              <li>Input Scheduled <strong>Return Date</strong> (Maximum duration: 30 days).</li>
+              <li>In the <strong>Allocated Hardware</strong> child table, add serial items.</li>
+              <li>Click <strong>Submit</strong>. System automatically marks asset records as <code>Loaned Out</code>.</li>
+            </ol>
+            <h4 style="color: #2dd4bf; margin: 10px 0 6px;">Procedure 2: Processing Equipment Return</h4>
+            <p>Click the <code>Process Return</code> button in the upper action bar. In the modal checklist, inspect the hardware condition (Good, Scratched, Damaged). Upon submission, assets are released back to <code>Available</code>.</p>
+          </div>
+        </div>
+
+        <!-- Tab 4: Generated Fullstack Code -->
+        <div v-else-if="activeTab === 'code'" class="preview-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <div style="font-family: 'JetBrains Mono'; font-size: 0.85rem; color: #2dd4bf;">
+              equipment_loan/doctype/equipment_loan/equipment_loan.py
+            </div>
+            <button class="btn-desk btn-secondary" @click="copyCode">
+              <i class="fa-solid fa-copy"></i> Copy Code
+            </button>
+          </div>
+          <pre style="background: #0b1120; border: 1px solid var(--surface-border); border-radius: 10px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #38bdf8; overflow-x: auto; max-height: 400px;"><code>import frappe
+from frappe import _
+from frappe.model.document import Document
+from frappe.utils import getdate
+
+class EquipmentLoan(Document):
+    def validate(self):
+        # 1. Date Validation
+        if getdate(self.return_date) <= getdate(self.loan_date):
+            frappe.throw(_("Scheduled Return Date must be after Loan Date."))
+            
+        # 2. Borrower Overdue Check
+        overdue = frappe.get_all("Equipment Loan", filters={
+            "borrower": self.borrower, "status": "Overdue", "docstatus": 1
+        })
+        if overdue:
+            frappe.throw(_("Borrower has active overdue loans. Please return overdue items first."))
+
+    def on_submit(self):
+        self.status = "Active"
+        for item in self.items:
+            frappe.db.set_value("Loanable Asset", item.asset, "status", "Loaned Out")
+
+    def on_cancel(self):
+        self.status = "Cancelled"
+        for item in self.items:
+            frappe.db.set_value("Loanable Asset", item.asset, "status", "Available")</code></pre>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const { createApp, ref } = Vue;
+
+    createApp({
+      setup() {
+        const activeMode = ref('prompt');
+        const activeTab = ref('form');
+        const userPrompt = ref('Build an IT Equipment Loan and Return System with hardware serial verification, 30-day loan limits, and return inspection checklists.');
+        const isRunning = ref(false);
+        const isListening = ref(false);
+        const uploadedFile = ref('');
+
+        const pipelineSteps = ref([
+          { name: 'Multi-Modal Ingestion & Normalization', agent: 'frappe-prompt-to-app-builder', status: 'completed' },
+          { name: 'Architecture & System Blueprinting (C4 / ER)', agent: 'frappe-hld-architect & lld-designer', status: 'completed' },
+          { name: 'Ergonomic Desk & Wireframe Prototyping', agent: 'frappe-wireframe-builder & prototyper', status: 'completed' },
+          { name: 'Turnkey Fullstack Code Synthesis (DocTypes/APIs)', agent: 'frappe-fullstack-developer', status: 'completed' },
+          { name: 'Automated E2E Playwright Testing', agent: 'frappe-automated-tester', status: 'completed' },
+          { name: 'Visual Working SOP with Screenshots', agent: 'frappe-working-sop-author', status: 'completed' }
+        ]);
+
+        const formData = ref({
+          borrower: 'alex.mercer@acmecorp.com',
+          department: 'Core Infrastructure Engineering',
+          loanDate: '2026-09-21',
+          returnDate: '2026-10-15',
+          items: [
+            { asset: 'AST-MBP-01', description: 'MacBook Pro 16" M3 Max 64GB', serial: 'C02G8912MD6T', val: 3499, cond: 'Pristine' },
+            { asset: 'AST-MN-02', description: 'Studio Display 27" 5K Nano-Texture', serial: 'MN27-5K-8821', val: 1599, cond: 'Good' }
+          ]
+        });
+
+        const loadPrompt = (title) => {
+          if (title.includes('Fleet')) {
+            userPrompt.value = 'Build a fleet vehicle dispatch and return management system with GPS odometer tracking and fuel card reconciliation.';
+          } else if (title.includes('Hospital')) {
+            userPrompt.value = 'Build a hospital bed allocation and emergency patient admission system with ward transfer state machines.';
+          } else if (title.includes('Inventory')) {
+            userPrompt.value = 'Build a B2B warehouse inventory checkout system with camera barcode scanner and supplier replenishment triggers.';
+          } else {
+            userPrompt.value = 'Build an IT Equipment Loan and Return System with hardware serial verification, 30-day loan limits, and return inspection checklists.';
+          }
+        };
+
+        const simulateFileUpload = (filename) => {
+          uploadedFile.value = filename;
+          alert(`File Ingested: ${filename}\nNormalized 3NF relational schema generated with 2 DocTypes and 1 Child Table.`);
+        };
+
+        const toggleVoice = () => {
+          isListening.value = !isListening.value;
+          if (isListening.value) {
+            setTimeout(() => {
+              isListening.value = false;
+              userPrompt.value = 'Create a corporate equipment rental system with automatic WhatsApp return reminders and damage deposits.';
+              alert('Voice intent transcribed successfully into natural language prompt!');
+            }, 2500);
+          }
+        };
+
+        const runPipeline = () => {
+          isRunning.value = true;
+          let idx = 0;
+          pipelineSteps.value.forEach(s => s.status = 'pending');
+          
+          const interval = setInterval(() => {
+            if (idx < pipelineSteps.value.length) {
+              pipelineSteps.value[idx].status = 'active';
+              if (idx > 0) pipelineSteps.value[idx - 1].status = 'completed';
+              idx++;
+            } else {
+              pipelineSteps.value[pipelineSteps.value.length - 1].status = 'completed';
+              isRunning.value = false;
+              clearInterval(interval);
+              alert('Application Synthesized! All 52 agents completed verification. App is ready for live testing.');
+            }
+          }, 800);
+        };
+
+        const openReturnModal = () => {
+          alert('Process Return Modal Activated: Hardware inspected (Good condition). Assets released back to available inventory.');
+        };
+
+        const saveRecord = () => {
+          alert('Document Saved: LOAN-2026-00001 synchronized with MariaDB ledger.');
+        };
+
+        const copyCode = () => {
+          alert('Fullstack Python DocType controller copied to clipboard.');
+        };
+
+        const exportCode = () => {
+          alert('Exporting Frappe App Package: equipment_loan.zip (Includes DocTypes, Client Scripts, Fixtures, and Working SOP)');
+        };
+
+        return {
+          activeMode,
+          activeTab,
+          userPrompt,
+          isRunning,
+          isListening,
+          uploadedFile,
+          pipelineSteps,
+          formData,
+          loadPrompt,
+          simulateFileUpload,
+          toggleVoice,
+          runPipeline,
+          openReturnModal,
+          saveRecord,
+          copyCode,
+          exportCode
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

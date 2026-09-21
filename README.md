@@ -203,7 +203,21 @@ python bin/frappe-shield.py path/to/your/frappe_app
 
 ---
 
-## 📖 Complete Documentation Library
+### Master Architecture & System Specifications
+- **Master High-Level Design (HLD)**: [FRAPPE_AES_HLD_ARCHITECTURE.md](docs/FRAPPE_AES_HLD_ARCHITECTURE.md)
+- **Master Low-Level Design (LLD)**: [FRAPPE_AES_LLD_SPECIFICATION.md](docs/FRAPPE_AES_LLD_SPECIFICATION.md)
+- **Commercial Pitch Deck (Investor & Enterprise)**: [FRAPPE_AES_COMMERCIAL_PITCH_DECK.md](docs/FRAPPE_AES_COMMERCIAL_PITCH_DECK.md)
+- **Simple English Non-Tech Project Report**: [FRAPPE_AES_SIMPLE_ENGLISH_EXECUTIVE_REPORT.md](docs/FRAPPE_AES_SIMPLE_ENGLISH_EXECUTIVE_REPORT.md)
+- **Simple English Report Word Document**: [FRAPPE_AES_SIMPLE_ENGLISH_EXECUTIVE_REPORT.docx](docs/FRAPPE_AES_SIMPLE_ENGLISH_EXECUTIVE_REPORT.docx)
+- **Simple English Report PDF Document**: [FRAPPE_AES_SIMPLE_ENGLISH_EXECUTIVE_REPORT.pdf](docs/FRAPPE_AES_SIMPLE_ENGLISH_EXECUTIVE_REPORT.pdf)
+
+### Interactive Prototype & Native Installers
+- **Interactive Working Prototype Studio**: [studio/index.html](studio/index.html)
+- **Windows 1-Click Desktop Launcher**: [Launch_FrappeAES_Studio.bat](installers/windows/Launch_FrappeAES_Studio.bat)
+- **Windows Desktop Shortcut Installer**: [Install_FrappeAES_Shortcut.ps1](installers/windows/Install_FrappeAES_Shortcut.ps1)
+- **iOS 1-Tap Safari Installation Guide**: [IOS_INSTALLATION_GUIDE.md](installers/ios/IOS_INSTALLATION_GUIDE.md)
+- **Apple iOS WebClip Profile**: [FrappeAES.mobileconfig](installers/ios/FrappeAES.mobileconfig)
+- **iOS PWA Manifest**: [manifest.json](installers/ios/manifest.json)
 
 ### Commercial Product & Strategy
 - **Commercial Product Specification**: [FRAPPE_NO_CODE_COMMERCIAL_PRODUCT_SPEC.md](docs/FRAPPE_NO_CODE_COMMERCIAL_PRODUCT_SPEC.md)
