@@ -1,0 +1,79 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "format:AST-.#####",
+  "creation": "2026-09-21 10:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "asset_name",
+    "serial_no",
+    "category",
+    "column_break_1",
+    "status",
+    "replacement_value"
+  ],
+  "fields": [
+    {
+      "fieldname": "asset_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Asset Name",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "serial_no",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Serial Number",
+      "reqd": 1,
+      "unique": 1,
+      "search_index": 1
+    },
+    {
+      "default": "Laptop",
+      "fieldname": "category",
+      "fieldtype": "Select",
+      "label": "Category",
+      "options": "Laptop\nMonitor\nMobile\nPeripheral"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "Available",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Available\nLoaned Out\nUnder Maintenance\nDecommissioned"
+    },
+    {
+      "fieldname": "replacement_value",
+      "fieldtype": "Currency",
+      "label": "Replacement Value (USD)",
+      "options": "USD"
+    }
+  ],
+  "module": "Equipment Loan",
+  "name": "Loanable Asset",
+  "naming_rule": "Expression",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "Asset Custodian"
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC"
+}

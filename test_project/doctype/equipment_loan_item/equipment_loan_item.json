@@ -1,0 +1,58 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-09-21 10:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "asset",
+    "serial_no",
+    "condition_on_loan",
+    "item_value",
+    "condition_on_return"
+  ],
+  "fields": [
+    {
+      "fieldname": "asset",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Asset",
+      "options": "Loanable Asset",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "asset.serial_no",
+      "fieldname": "serial_no",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Serial Number",
+      "read_only": 1
+    },
+    {
+      "default": "Good",
+      "fieldname": "condition_on_loan",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Condition on Loan",
+      "options": "New\nGood\nFair"
+    },
+    {
+      "fetch_from": "asset.replacement_value",
+      "fieldname": "item_value",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Replacement Value (USD)",
+      "options": "USD"
+    },
+    {
+      "fieldname": "condition_on_return",
+      "fieldtype": "Select",
+      "label": "Condition on Return",
+      "options": "\nGood\nDamaged\nLost"
+    }
+  ],
+  "istable": 1,
+  "module": "Equipment Loan",
+  "name": "Equipment Loan Item",
+  "permissions": []
+}

@@ -1,0 +1,148 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "format:LOAN-.YYYY.-.#####",
+  "creation": "2026-09-21 10:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "schedule_section",
+    "borrower",
+    "department",
+    "column_break_1",
+    "loan_date",
+    "expected_return_date",
+    "actual_return_date",
+    "status",
+    "items_section",
+    "items",
+    "total_loan_value",
+    "return_section",
+    "return_notes",
+    "amended_from"
+  ],
+  "fields": [
+    {
+      "fieldname": "schedule_section",
+      "fieldtype": "Section Break",
+      "label": "Borrower & Schedule"
+    },
+    {
+      "fieldname": "borrower",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Borrower Employee",
+      "options": "Employee",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "borrower.department",
+      "fieldname": "department",
+      "fieldtype": "Data",
+      "label": "Department",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "Today",
+      "fieldname": "loan_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Loan Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "expected_return_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Expected Return Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "actual_return_date",
+      "fieldtype": "Date",
+      "label": "Actual Return Date",
+      "read_only": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Draft\nActive\nReturned\nOverdue\nCancelled",
+      "read_only": 1
+    },
+    {
+      "fieldname": "items_section",
+      "fieldtype": "Section Break",
+      "label": "Borrowed Equipment"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Hardware Items",
+      "options": "Equipment Loan Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "total_loan_value",
+      "fieldtype": "Currency",
+      "label": "Total Loan Value",
+      "options": "USD",
+      "read_only": 1
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "return_section",
+      "fieldtype": "Section Break",
+      "label": "Return Audit & Notes"
+    },
+    {
+      "fieldname": "return_notes",
+      "fieldtype": "Small Text",
+      "label": "Return Notes"
+    },
+    {
+      "fieldname": "amended_from",
+      "fieldtype": "Link",
+      "label": "Amended From",
+      "no_copy": 1,
+      "options": "Equipment Loan",
+      "print_hide": 1,
+      "read_only": 1
+    }
+  ],
+  "is_submittable": 1,
+  "module": "Equipment Loan",
+  "name": "Equipment Loan",
+  "naming_rule": "Expression",
+  "permissions": [
+    {
+      "amend": 1,
+      "cancel": 1,
+      "create": 1,
+      "delete": 1,
+      "read": 1,
+      "role": "System Manager",
+      "submit": 1,
+      "write": 1
+    },
+    {
+      "cancel": 1,
+      "create": 1,
+      "read": 1,
+      "role": "IT Asset Manager",
+      "submit": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "track_changes": 1
+}

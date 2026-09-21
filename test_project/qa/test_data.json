@@ -1,0 +1,65 @@
+{
+  "employees": [
+    {
+      "name": "EMP-00104",
+      "employee_name": "Alex Mercer",
+      "department": "Cloud Engineering",
+      "status": "Active",
+      "has_overdue": false
+    },
+    {
+      "name": "EMP-00105",
+      "employee_name": "Jordan Lee",
+      "department": "QA & Systems",
+      "status": "Active",
+      "has_overdue": true,
+      "overdue_loan": "LOAN-2026-00008"
+    }
+  ],
+  "loanable_assets": [
+    {
+      "name": "AST-001",
+      "asset_name": "MacBook Pro 16\" M3 Max",
+      "serial_no": "MBP-M3-9901",
+      "category": "Laptop",
+      "status": "Available",
+      "replacement_value": 3499.00
+    },
+    {
+      "name": "AST-002",
+      "asset_name": "Apple Studio Display 27\"",
+      "serial_no": "MN-4K-2210",
+      "category": "Monitor",
+      "status": "Available",
+      "replacement_value": 1599.00
+    },
+    {
+      "name": "AST-003",
+      "asset_name": "Magic Keyboard & Mouse Kit",
+      "serial_no": "KM-KIT-102",
+      "category": "Peripheral",
+      "status": "Available",
+      "replacement_value": 299.00
+    },
+    {
+      "name": "AST-004",
+      "asset_name": "Dell UltraSharp 32\" 6K",
+      "serial_no": "DL-6K-4001",
+      "category": "Monitor",
+      "status": "Loaned Out",
+      "replacement_value": 2199.00
+    }
+  ],
+  "sample_loans": [
+    {
+      "name": "LOAN-2026-00042",
+      "borrower": "EMP-00104",
+      "loan_date": "2026-09-21",
+      "expected_return_date": "2026-10-05",
+      "items": [
+        { "asset": "AST-001", "item_value": 3499.00 },
+        { "asset": "AST-002", "item_value": 1599.00 }
+      ]
+    }
+  ]
+}

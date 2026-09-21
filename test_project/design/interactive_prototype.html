@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frappe Desk — Equipment Loan Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 antialiased min-h-screen">
+  <div id="app" class="flex h-screen overflow-hidden">
+    
+    <!-- Frappe Desk Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex">
+      <div>
+        <div class="h-14 border-b border-gray-200 flex items-center px-4 space-x-3">
+          <div class="w-7 h-7 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-sm">F</div>
+          <span class="font-semibold text-gray-900 tracking-tight">Frappe Framework</span>
+        </div>
+        <nav class="p-4 space-y-1 text-sm font-medium">
+          <a href="#" class="flex items-center px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-house w-6 text-gray-400"></i> Home</a>
+          <a href="#" class="flex items-center px-3 py-2 text-blue-600 bg-blue-50 rounded-lg"><i class="fa-solid fa-laptop-file w-6 text-blue-600"></i> Equipment Loans</a>
+          <a href="#" class="flex items-center px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-boxes-stacked w-6 text-gray-400"></i> Loanable Assets</a>
+          <a href="#" class="flex items-center px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-users w-6 text-gray-400"></i> Employees</a>
+        </nav>
+      </div>
+      <div class="p-4 border-t border-gray-200 flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">SK</div>
+        <div>
+          <p class="text-xs font-semibold text-gray-800">Srikrishna RG</p>
+          <p class="text-[11px] text-gray-400">IT Administrator</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex flex-col overflow-y-auto">
+      
+      <!-- Awesomebar / Topnav -->
+      <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10 sticky top-0">
+        <div class="flex items-center space-x-2 text-sm text-gray-500">
+          <span class="hover:text-gray-700 cursor-pointer">IT Management</span>
+          <span>/</span>
+          <span class="text-gray-900 font-medium">Equipment Loan</span>
+        </div>
+        <div class="w-80 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-gray-400"></i>
+          <input type="text" placeholder="Search or type a command (Ctrl + G)" class="w-full pl-8 pr-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+        </div>
+      </header>
+
+      <!-- Document View -->
+      <main class="p-6 max-w-5xl mx-auto w-full space-y-6">
+        
+        <!-- Document Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+          <div class="flex items-center space-x-3">
+            <div>
+              <span class="text-[11px] uppercase font-bold text-gray-400 tracking-wider">Equipment Loan</span>
+              <h1 class="text-2xl font-bold text-gray-900">{{ doc.name }}</h1>
+            </div>
+            <span :class="statusBadgeClass" class="px-2.5 py-1 rounded-full text-xs font-semibold flex items-center space-x-1.5">
+              <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass"></span>
+              <span>{{ doc.status }}</span>
+            </span>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center space-x-2">
+            <button v-if="doc.docstatus === 0" @click="submitDoc" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm transition">
+              <i class="fa-solid fa-check mr-1"></i> Submit Loan
+            </button>
+            <button v-if="doc.docstatus === 1 && doc.status === 'Active'" @click="showReturnDialog = true" class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm transition">
+              <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Process Return
+            </button>
+            <button v-if="doc.docstatus === 1" @click="cancelDoc" class="border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold px-3 py-2 rounded-md transition">
+              Cancel
+            </button>
+            <button @click="resetDemo" class="text-xs text-gray-500 hover:text-gray-800 underline ml-2">Reset Demo</button>
+          </div>
+        </div>
+
+        <!-- Alert Toast -->
+        <div v-if="alertMessage" class="p-3 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-md flex justify-between items-center animate-fade-in">
+          <span><i class="fa-solid fa-circle-info mr-1.5"></i> {{ alertMessage }}</span>
+          <button @click="alertMessage = ''" class="text-blue-500 hover:text-blue-700">&times;</button>
+        </div>
+
+        <!-- Form Body Card -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-6">
+          
+          <!-- Section 1 -->
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4 border-b pb-2">1. Borrower & Schedule</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Borrower Employee <span class="text-red-500">*</span></label>
+                <select v-model="doc.borrower" :disabled="doc.docstatus !== 0" class="w-full text-xs p-2 border rounded border-gray-300 focus:ring-1 focus:ring-blue-500">
+                  <option value="EMP-00104 - Alex Mercer">EMP-00104 - Alex Mercer (Software Engineer)</option>
+                  <option value="EMP-00105 - Jordan Lee">EMP-00105 - Jordan Lee (Has Overdue Alert)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Department</label>
+                <input type="text" v-model="doc.department" readonly class="w-full text-xs p-2 bg-gray-50 border rounded border-gray-200 text-gray-600">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Loan Date <span class="text-red-500">*</span></label>
+                <input type="date" v-model="doc.loan_date" :disabled="doc.docstatus !== 0" class="w-full text-xs p-2 border rounded border-gray-300">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Expected Return Date <span class="text-red-500">*</span></label>
+                <input type="date" v-model="doc.expected_return_date" :disabled="doc.docstatus !== 0" class="w-full text-xs p-2 border rounded border-gray-300">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Child Table -->
+          <div>
+            <div class="flex justify-between items-center mb-3 border-b pb-2">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">2. Allocated Hardware Items</h2>
+              <button v-if="doc.docstatus === 0" @click="addRow" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">
+                <i class="fa-solid fa-plus mr-1"></i> Add Hardware Item
+              </button>
+            </div>
+
+            <div class="overflow-x-auto border rounded-lg">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-gray-50 text-gray-600 border-b">
+                  <tr>
+                    <th class="p-3 w-12 text-center">#</th>
+                    <th class="p-3">Asset Item</th>
+                    <th class="p-3">Serial Number</th>
+                    <th class="p-3">Condition on Loan</th>
+                    <th class="p-3 text-right">Value (USD)</th>
+                    <th v-if="doc.docstatus === 0" class="p-3 w-16 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="(item, idx) in doc.items" :key="idx" class="hover:bg-gray-50">
+                    <td class="p-3 text-center text-gray-400">{{ idx + 1 }}</td>
+                    <td class="p-3 font-medium text-gray-800">
+                      <select v-if="doc.docstatus === 0" v-model="item.asset" @change="onAssetSelect(item)" class="p-1 border rounded text-xs w-full">
+                        <option value="AST-001">MacBook Pro 16" M3 Max</option>
+                        <option value="AST-002">Apple Studio Display 27"</option>
+                        <option value="AST-003">Magic Keyboard & Mouse Kit</option>
+                      </select>
+                      <span v-else>{{ item.asset_name }}</span>
+                    </td>
+                    <td class="p-3 text-gray-500 font-mono">{{ item.serial_no }}</td>
+                    <td class="p-3 text-gray-700">{{ item.condition }}</td>
+                    <td class="p-3 text-right font-semibold text-gray-900">${{ item.value.toFixed(2) }}</td>
+                    <td v-if="doc.docstatus === 0" class="p-3 text-center">
+                      <button @click="removeRow(idx)" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot class="bg-gray-50 border-t font-semibold text-gray-900">
+                  <tr>
+                    <td colspan="4" class="p-3 text-right">Total Replacement Value:</td>
+                    <td class="p-3 text-right text-sm text-blue-600">${{ totalValue.toFixed(2) }}</td>
+                    <td v-if="doc.docstatus === 0"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Section 3: Return Information -->
+          <div v-if="doc.status === 'Returned'">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-green-700 mb-2 border-b pb-1">3. Return Verification Record</h2>
+            <div class="bg-green-50 p-4 rounded-lg border border-green-200 text-xs space-y-1">
+              <p><span class="font-semibold text-green-900">Actual Return Date:</span> {{ doc.actual_return_date }}</p>
+              <p><span class="font-semibold text-green-900">Return Inspector Notes:</span> {{ doc.return_notes }}</p>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <!-- Process Return Modal Dialog -->
+    <div v-if="showReturnDialog" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4 animate-scale-up">
+        <div class="flex justify-between items-center border-b pb-3">
+          <h3 class="text-sm font-bold text-gray-900">Process Equipment Return</h3>
+          <button @click="showReturnDialog = false" class="text-gray-400 hover:text-gray-600">&times;</button>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-gray-700 mb-1">Return Date</label>
+            <input type="date" v-model="returnForm.return_date" class="w-full p-2 border rounded border-gray-300">
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-700 mb-1">Hardware Inspection Checklist</label>
+            <div class="space-y-2 p-2 bg-gray-50 rounded border">
+              <label v-for="item in doc.items" class="flex items-center space-x-2">
+                <input type="checkbox" checked class="rounded text-blue-600">
+                <span>{{ item.asset_name }} ({{ item.serial_no }}) - Operational</span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-700 mb-1">Inspector Notes</label>
+            <textarea v-model="returnForm.notes" rows="2" class="w-full p-2 border rounded border-gray-300" placeholder="e.g. All cables returned, condition excellent."></textarea>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-2 pt-3 border-t">
+          <button @click="showReturnDialog = false" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+          <button @click="confirmReturn" class="px-4 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white font-semibold rounded">Confirm Return</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+      setup() {
+        const doc = ref({
+          name: "LOAN-2026-00042",
+          borrower: "EMP-00104 - Alex Mercer",
+          department: "Cloud Engineering",
+          loan_date: "2026-09-21",
+          expected_return_date: "2026-10-05",
+          actual_return_date: null,
+          status: "Draft",
+          docstatus: 0,
+          return_notes: "",
+          items: [
+            { asset: "AST-001", asset_name: "MacBook Pro 16\" M3 Max", serial_no: "MBP-M3-9901", condition: "Good", value: 3499.00 },
+            { asset: "AST-002", asset_name: "Apple Studio Display 27\"", serial_no: "MN-4K-2210", condition: "New", value: 1599.00 }
+          ]
+        });
+
+        const alertMessage = ref("Document initialized in Draft status. You can edit rows or click Submit.");
+        const showReturnDialog = ref(false);
+        const returnForm = ref({
+          return_date: new Date().toISOString().split('T')[0],
+          notes: "Returned via IT Helpdesk. Inspected and verified in perfect operational condition."
+        });
+
+        const totalValue = computed(() => {
+          return doc.value.items.reduce((sum, item) => sum + (item.value || 0), 0);
+        });
+
+        const statusBadgeClass = computed(() => {
+          if (doc.value.status === 'Draft') return 'bg-gray-100 text-gray-700 border border-gray-200';
+          if (doc.value.status === 'Active') return 'bg-green-100 text-green-800 border border-green-200';
+          if (doc.value.status === 'Returned') return 'bg-blue-100 text-blue-800 border border-blue-200';
+          return 'bg-red-100 text-red-800 border border-red-200';
+        });
+
+        const statusDotClass = computed(() => {
+          if (doc.value.status === 'Draft') return 'bg-gray-400';
+          if (doc.value.status === 'Active') return 'bg-green-500';
+          if (doc.value.status === 'Returned') return 'bg-blue-500';
+          return 'bg-red-500';
+        });
+
+        function onAssetSelect(item) {
+          if (item.asset === 'AST-001') {
+            item.asset_name = 'MacBook Pro 16" M3 Max';
+            item.serial_no = 'MBP-M3-9901';
+            item.value = 3499.00;
+          } else if (item.asset === 'AST-002') {
+            item.asset_name = 'Apple Studio Display 27"';
+            item.serial_no = 'MN-4K-2210';
+            item.value = 1599.00;
+          } else {
+            item.asset_name = 'Magic Keyboard & Mouse Kit';
+            item.serial_no = 'KM-KIT-102';
+            item.value = 299.00;
+          }
+        }
+
+        function addRow() {
+          doc.value.items.push({
+            asset: "AST-003",
+            asset_name: "Magic Keyboard & Mouse Kit",
+            serial_no: "KM-KIT-102",
+            condition: "Good",
+            value: 299.00
+          });
+        }
+
+        function removeRow(idx) {
+          doc.value.items.splice(idx, 1);
+        }
+
+        function submitDoc() {
+          doc.value.docstatus = 1;
+          doc.value.status = "Active";
+          alertMessage.value = "Loan LOAN-2026-00042 has been SUBMITTED! Allocated hardware items are now marked as 'Loaned Out' in inventory.";
+        }
+
+        function confirmReturn() {
+          showReturnDialog.value = false;
+          doc.value.status = "Returned";
+          doc.value.actual_return_date = returnForm.value.return_date;
+          doc.value.return_notes = returnForm.value.notes;
+          alertMessage.value = "Hardware items verified and returned successfully! Assets are now released and available for lending.";
+        }
+
+        function cancelDoc() {
+          doc.value.docstatus = 2;
+          doc.value.status = "Cancelled";
+          alertMessage.value = "Loan has been CANCELLED. All item reservations have been reversed.";
+        }
+
+        function resetDemo() {
+          doc.value.docstatus = 0;
+          doc.value.status = "Draft";
+          doc.value.actual_return_date = null;
+          doc.value.return_notes = "";
+          alertMessage.value = "Reset to initial state.";
+        }
+
+        return {
+          doc,
+          alertMessage,
+          showReturnDialog,
+          returnForm,
+          totalValue,
+          statusBadgeClass,
+          statusDotClass,
+          onAssetSelect,
+          addRow,
+          removeRow,
+          submitDoc,
+          confirmReturn,
+          cancelDoc,
+          resetDemo
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
