@@ -84,6 +84,9 @@ python bin/frappe-shield.py path/to/your/frappe_app
 
 ## 📖 Complete Documentation
 - **Master Setup Guide**: [ECC_Frappe_Complete_Setup_Guide.md](docs/ECC_Frappe_Complete_Setup_Guide.md)
+- **Multi-Agent Architecture & Pipeline Spec**: [FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.md](docs/FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.md)
+- **Architecture Spec Word Document**: [FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.docx](docs/FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.docx)
+- **Architecture Spec PDF Document**: [FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.pdf](docs/FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.pdf)
 - **Standard Operating Procedure (SOP)**: [FRAPPE_ECC_SOP.md](docs/FRAPPE_ECC_SOP.md)
 - **SOP Word Document**: [FRAPPE_ECC_SOP.docx](docs/FRAPPE_ECC_SOP.docx)
 - **SOP PDF Document**: [FRAPPE_ECC_SOP.pdf](docs/FRAPPE_ECC_SOP.pdf)
