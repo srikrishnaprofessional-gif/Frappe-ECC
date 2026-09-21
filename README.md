@@ -83,6 +83,9 @@ python bin/frappe-shield.py path/to/your/frappe_app
 ---
 
 ## 📖 Complete Documentation
+- **Executive Pitch Deck (Product Presentation)**: [FRAPPE_ECC_PITCH_DECK.md](docs/FRAPPE_ECC_PITCH_DECK.md)
+- **Pitch Deck Word Document**: [FRAPPE_ECC_PITCH_DECK.docx](docs/FRAPPE_ECC_PITCH_DECK.docx)
+- **Pitch Deck PDF Document**: [FRAPPE_ECC_PITCH_DECK.pdf](docs/FRAPPE_ECC_PITCH_DECK.pdf)
 - **Master Setup Guide**: [ECC_Frappe_Complete_Setup_Guide.md](docs/ECC_Frappe_Complete_Setup_Guide.md)
 - **Multi-Agent Architecture & Pipeline Spec**: [FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.md](docs/FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.md)
 - **Architecture Spec Word Document**: [FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.docx](docs/FRAPPE_ECC_AGENT_ARCHITECTURE_AND_PIPELINE.docx)
