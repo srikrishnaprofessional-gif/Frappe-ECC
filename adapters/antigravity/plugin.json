@@ -1,7 +1,7 @@
 {
   "name": "frappe-ecc",
-  "version": "1.1.0",
-  "description": "Engineering Coordination Center for Frappe Framework & ERPNext",
+  "version": "2.0.0",
+  "description": "Frappe Autonomous Enterprise Studio (Frappe AES): Complete No-Code & Low-Code AI Platform for Frappe Framework & ERPNext",
   "skills": [
     "frappe-doctype-design",
     "frappe-orm-and-queries",
