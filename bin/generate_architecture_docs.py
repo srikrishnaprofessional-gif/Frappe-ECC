@@ -234,7 +234,7 @@ def build_docx(output_path):
     ).paragraph_format.space_after = Pt(6)
 
     # Agent Table
-    agent_table = doc.add_table(rows=21, cols=5)
+    agent_table = doc.add_table(rows=29, cols=5)
     agent_table.alignment = WD_TABLE_ALIGNMENT.CENTER
     headers = ["Specialist Agent", "Primary Input", "Cognitive Processing", "Output Artifact", "Downstream Consumer"]
     for col_idx, h in enumerate(headers):
@@ -249,26 +249,34 @@ def build_docx(output_path):
         cr.font.size = Pt(8.5)
 
     agents_data = [
+        ("frappe-autonomous-orchestrator", "Raw prompt from user", "Intent decomposition, dynamic DAG formation, multi-agent dispatch", "End-to-end execution pipeline", "All 27 downstream agents"),
+        ("frappe-product-manager", "Raw prompt / business concept", "Domain discovery, user personas, PRD specs, acceptance criteria", "PRD_<feature>.md", "frappe-hld-architect, frappe-lld-designer"),
         ("frappe-hld-architect", "Business PRD, feature request", "C4 container modeling, queue topology, Redis caching strategy", "HLD_<feature>.md", "frappe-lld-designer, frappe-planner"),
         ("frappe-lld-designer", "HLD.md", "Entity modeling, field datatypes, state transition matrices, API contracts", "LLD_<feature>.md", "frappe-ui-ux-designer, frappe-planner, frappe-tdd-guide"),
-        ("frappe-planner", "HLD.md + LLD.md", "Taxonomy mapping, autonaming rules, DocType scaffolding", "DocType JSON blueprints", "frappe-fullstack-developer, frappe-tdd-guide"),
+        ("frappe-data-synthesizer", "LLD schemas & domain context", "Relational seed fixture generation, mock transactions, edge cases", "fixtures/*.json, test_data.json", "frappe-manual-qa, frappe-automated-tester"),
+        ("frappe-rbac-compliance-guardian", "User roles & access rules", "Custom DocPerms, row-level permission query filters, field permlevels", "DocPerm JSONs, permission hooks", "frappe-backend-builder, frappe-security-reviewer"),
         ("frappe-ui-ux-designer", "LLD.md state machine & fields", "Desk layout ergonomics, visual tokens, responsive form specs", "UI/UX design guidelines", "frappe-wireframe-builder"),
         ("frappe-wireframe-builder", "UI/UX guidelines + field schemas", "Layout wireframing, child table grid design, modal dialog mockups", "wireframes.md", "frappe-interactive-prototyper"),
         ("frappe-interactive-prototyper", "wireframes.md + sample fixtures", "Single-file Vue 3/Tailwind interactive prototype synthesis", "interactive_prototype.html", "Stakeholder Sign-Off, frappe-desk-builder"),
         ("frappe-tdd-guide", "LLD.md validation rules", "Red-Green-Refactor test scaffolding; exception assertions", "test_<doctype>.py", "frappe-fullstack-developer"),
         ("frappe-manual-qa", "Prototype & Controller rules", "Boundary condition analysis, exploratory charters, QA matrices", "test_scenarios.md & test_data.json", "frappe-automated-tester, QA Engineers"),
         ("frappe-automated-tester", "Form DOM selectors & QA scenarios", "Headless Playwright script generation; form entry & state assertions", "test_e2e_playwright.py", "CI/CD Runner, Bench test runner"),
+        ("frappe-self-healing-debugger", "Test stack traces & AST errors", "Traceback isolation, root-cause analysis, surgical auto-patching", "Surgical code patches & repairs", "frappe-automated-tester, orchestrator"),
         ("frappe-fullstack-developer", "Prototype + LLD.md + Failing tests", "Vertical slice code synthesis with zero placeholders", "<doctype>/ (.json, .py, .js)", "frappe-backend-builder, frappe-desk-builder"),
         ("frappe-backend-builder", "Controller draft & business rules", "Lifecycle hooks (validate, on_submit), QueryBuilder (frappe.qb)", "Production <doctype>.py", "frappe-security-reviewer, frappe-code-reviewer"),
         ("frappe-desk-builder", "Prototype interactions", "Desk form client scripts (frappe.ui.form.on), dynamic dialogs", "<doctype>.js", "frappe-code-reviewer"),
+        ("frappe-integrations-broker", "Third-party API requirements", "Stripe/PayPal payment webhooks, WhatsApp Cloud API, S3/GCS sync", "Integration adapters & workers", "frappe-fullstack-developer"),
+        ("frappe-print-format-designer", "DocType fields & branding specs", "Jinja2 HTML/CSS templates, barcode labels, tax invoices", "Print Format HTML/CSS records", "frappe-desk-builder"),
         ("frappe-api-integrator", "LLD.md API contracts", "Whitelisted REST endpoints, rate limiting, authentication", "<api_name>.py", "External clients, frappe-security-reviewer"),
         ("frappe-report-builder", "Query specs & KPI metrics", "Script Reports (Python aggregator + JS visual filter chart)", "<report>.py & <report>.js", "Executive Dashboards"),
         ("frappe-architect", "System-wide events & requirements", "Hook registration (doc_events, cron schedulers, class overrides)", "Updated hooks.py", "frappe-bench-devops"),
         ("frappe-bench-devops", "Site config & worker errors", "Multi-tenancy diagnostics, worker tuning (Redis RQ), site provisioning", "Bench execution commands", "System Administrators"),
         ("frappe-migration-patcher", "Schema diffs between versions", "Idempotent database patches; column conversions without data loss", "patches/<patch>.py & patches.txt", "Bench migrate workflow"),
+        ("frappe-release-devops", "App codebase & test scripts", "GitHub Actions CI/CD workflows, multi-stage Dockerfile, compose.yaml", "ci.yml, Dockerfile, compose.yaml", "DevOps & Cloud Engineers"),
         ("frappe-doc-updater", "Schemas, APIs, and controllers", "API documentation synchronization and end-user manuals", "README.md, developer docs", "Technical Writers & End Users"),
         ("frappe-code-reviewer", "Git diff of implemented code", "Fresh-context review for Frappe anti-patterns and N+1 query loops", "Structured code review report", "Software Engineers"),
-        ("frappe-security-reviewer", "Full application codebase", "AST static analysis (SQLi, CSRF, IDOR, transaction leaks)", "Security audit report (frappe-shield)", "Release Managers & CI/CD")
+        ("frappe-security-reviewer", "Full application codebase", "AST static analysis (SQLi, CSRF, IDOR, transaction leaks)", "Security audit report (frappe-shield)", "Release Managers & CI/CD"),
+        ("frappe-planner", "HLD.md + LLD.md", "Taxonomy mapping, autonaming rules, DocType scaffolding", "DocType JSON blueprints", "frappe-fullstack-developer, frappe-tdd-guide")
     ]
 
     for idx, row_data in enumerate(agents_data):

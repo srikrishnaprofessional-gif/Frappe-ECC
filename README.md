@@ -38,37 +38,45 @@ It covers the complete engineering lifecycle: **HLD/LLD Architecture**, **UI/UX 
 
 | Component | Count | Description |
 |---|---|---|
-| **Agents** | 20 | Specialist AI workers: UI/UX, Manual QA, Automated Testing (Playwright), Fullstack E2E Dev, HLD, LLD, Wireframing, Prototyping, Planning, Controllers, Desk UI, TDD, Code Review, Security, DevOps, Migrations, Reporting, APIs, Docs |
+| **Agents** | 28 | Autonomous & specialist AI workers: Orchestration, Product Management, HLD, LLD, UI/UX, Wireframing, Prototyping, Fullstack Dev, TDD, Manual QA, Playwright Testing, Self-Healing Debugger, Data Synthesis, RBAC Compliance, Integrations Broker, Print Formats, DevOps, Security |
 | **Skills** | 18 | Production workflows: HLD/LLD design, Wireframing & Prototyping, QA test automation, Turnkey scaffolding, DocType modeling, QueryBuilder, `hooks.py`, client scripts, REST APIs, permissions, TDD, background jobs, reports, patches, Bench CLI, Frappe UI, Portal |
-| **Commands** | 20 | Slash commands: `/frappe:hld`, `/frappe:lld`, `/frappe:wireframe`, `/frappe:prototype`, `/frappe:build-e2e`, `/frappe:manual-qa`, `/frappe:e2e-test`, `/frappe:plan`, `/frappe:doctype`, `/frappe:controller`, `/frappe:test`, `/frappe:security`, `/frappe:bench`, etc. |
+| **Commands** | 26 | Slash commands: `/frappe:auto`, `/frappe:heal`, `/frappe:fixtures`, `/frappe:rbac`, `/frappe:print-format`, `/frappe:deploy`, `/frappe:hld`, `/frappe:lld`, `/frappe:wireframe`, `/frappe:prototype`, `/frappe:build-e2e`, `/frappe:manual-qa`, `/frappe:e2e-test`, `/frappe:plan`, `/frappe:doctype`, `/frappe:controller`, `/frappe:test`, `/frappe:security`, `/frappe:bench`, etc. |
 | **Rules** | 5 | Always-loaded coding standards: Core architecture, Python backend, Desk JS, Security, and Database optimization |
 | **Frappe Shield** | Included | AST-based static security analyzer detecting SQLi in `frappe.db.sql`, `commit()` violations, and unvalidated guest APIs |
 
 ---
 
-## 🛠️ The 20 Specialist Agents
+## 🛠️ The 28 Autonomous & Specialist Agents
 
 | Agent | Responsibility |
 |---|---|
+| `frappe-autonomous-orchestrator`| Master autonomous director driving prompt-to-production DAG pipelines |
+| `frappe-product-manager` | Domain discovery, PRD specification & user story acceptance criteria |
 | `frappe-hld-architect` | High-Level Design (HLD) with Mermaid C4 architecture diagrams |
 | `frappe-lld-designer` | Low-Level Design (LLD) with Mermaid ER diagrams & state machines |
+| `frappe-data-synthesizer` | Domain-accurate seed fixtures (`fixtures/`) & relational test data |
+| `frappe-rbac-compliance-guardian`| Role-based access control, Custom DocPerms & permission query filters |
 | `frappe-ui-ux-designer` | UI/UX design, desk ergonomics, workspace dashboards, mobile UX |
 | `frappe-wireframe-builder` | Visual ASCII, Markdown, and SVG wireframe mockups |
 | `frappe-interactive-prototyper`| Clickable interactive single-file HTML/Vue prototypes |
 | `frappe-fullstack-developer` | Turnkey end-to-end fullstack feature synthesis without placeholders |
 | `frappe-planner` | Architectural blueprinting, DocType taxonomy & build sequence |
-| `frappe-architect` | System-level design, bench multi-tenancy & RQ queue topology |
 | `frappe-backend-builder` | Python DocType controllers, lifecycle hooks & QueryBuilder |
 | `frappe-desk-builder` | Desk client scripts, form UI events, dialogs & buttons |
+| `frappe-integrations-broker` | Third-party adapters (Stripe, PayPal, WhatsApp Cloud API, S3/GCS) |
+| `frappe-print-format-designer` | Print-ready Jinja2 HTML/CSS templates for invoices, slips & QR barcodes |
 | `frappe-tdd-guide` | Test-driven development with `FrappeTestCase` unit tests |
 | `frappe-manual-qa` | Comprehensive manual test plans, edge-case matrices & sign-off |
 | `frappe-automated-tester` | Playwright E2E browser automation & REST API regression tests |
+| `frappe-self-healing-debugger` | Automated root-cause isolation & surgical patch repair for test crashes |
 | `frappe-code-reviewer` | Fresh-context reviewer detecting Frappe anti-patterns |
 | `frappe-security-reviewer` | Security auditing for SQLi, broken access control & XSS |
+| `frappe-architect` | System-level design, bench multi-tenancy & RQ queue topology |
 | `frappe-bench-devops` | Bench CLI operations, Redis/RQ worker tuning & site repair |
 | `frappe-migration-patcher` | Database schema migrations & idempotent `patches.txt` scripts |
 | `frappe-report-builder` | Script Reports (Python + JS) & Dashboard Charts |
 | `frappe-api-integrator` | REST APIs, webhook listeners & OAuth2 client integration |
+| `frappe-release-devops` | CI/CD GitHub Actions workflows, Dockerfiles & Frappe Cloud deployment |
 | `frappe-doc-updater` | Auto-documentation for DocTypes, APIs & hooks registries |
 
 ---

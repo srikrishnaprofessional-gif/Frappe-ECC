@@ -1,7 +1,7 @@
 {
   "name": "frappe-ecc",
-  "version": "1.1.0",
-  "description": "Engineering Coordination Center for Frappe Framework & ERPNext (20 Agents, 18 Skills, 20 Commands)",
+  "version": "1.2.0",
+  "description": "Autonomous Engineering Coordination Center for Frappe Framework & ERPNext (28 Agents, 18 Skills, 26 Commands)",
   "bin": {
     "frappe-ecc": "./bin/frappe-ecc.js",
     "frappe-shield": "./bin/frappe-shield.py"
