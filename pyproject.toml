@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "frappe_ecc_agents"
+version = "2.1.0"
+description = "Frappe Enterprise Cloud Suite (ECC) Autonomous AI Agents Framework (53 Agents across 8 Pillars)"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "python-docx>=0.8.11"
+]
+
+[project.scripts]
+frappe-agent = "frappe_ecc_agents.cli:main"
