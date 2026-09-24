@@ -1,10 +1,11 @@
 {
   "name": "frappe-ecc",
-  "version": "2.0.0",
-  "description": "Frappe Autonomous Enterprise Studio (Frappe AES): Turnkey No-Code & Low-Code AI Operating Platform for Frappe Framework & ERPNext (52 Agents, 18 Skills, 50 Commands)",
+  "version": "2.1.0",
+  "description": "Frappe Autonomous Enterprise Studio (Frappe AES): Turnkey No-Code & Low-Code AI Operating Platform for Frappe Framework & ERPNext (53 Agents, 18 Skills, 51 Commands)",
   "bin": {
     "frappe-ecc": "./bin/frappe-ecc.js",
-    "frappe-shield": "./bin/frappe-shield.py"
+    "frappe-shield": "./bin/frappe-shield.py",
+    "frappe-app-builder": "./bin/frappe_app_git_builder.py"
   },
   "scripts": {
     "setup": "node ./bin/frappe-ecc.js setup",

@@ -5,8 +5,8 @@
 [![Frappe Framework](https://img.shields.io/badge/Frappe-v14%20%7C%20v15%20%7C%20v16-blue.svg)](https://frappeframework.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Security: Frappe Shield](https://img.shields.io/badge/Security-Frappe%20Shield-orange.svg)](#frappe-shield)
-[![Autonomous Agents](https://img.shields.io/badge/Agents-52%20Specialists-teal.svg)](#the-52-autonomous-specialist-agents)
-[![Slash Commands](https://img.shields.io/badge/Commands-50%20Commands-indigo.svg)](#complete-roster-of-50-slash-commands)
+[![Autonomous Agents](https://img.shields.io/badge/Agents-53%20Specialists-teal.svg)](#the-53-autonomous-specialist-agents)
+[![Slash Commands](https://img.shields.io/badge/Commands-51%20Commands-indigo.svg)](#complete-roster-of-51-slash-commands)
 
 **Frappe Autonomous Enterprise Studio (Frappe AES)** is a commercial-grade, full **No-Code & Low-Code AI Operating Platform** designed for AI code editors (**Antigravity**, **Claude Code**, **Cursor**, **Codex**, **Gemini CLI**).
 
@@ -41,15 +41,15 @@ It enables non-technical founders, operations managers, and enterprise IT leader
 
 | Component | Count | Description |
 |---|---|---|
-| **Agents** | 52 | Autonomous & specialist AI workers covering all 8 enterprise pillars: Ingestion, Architecture, Logic, BI Analytics, Multi-Experience, Fullstack Dev, Security/GDPR, and SaaS Support |
+| **Agents** | 53 | Autonomous & specialist AI workers covering all 8 enterprise pillars: Ingestion, Architecture, Logic, BI Analytics, Multi-Experience, Fullstack Dev, Security/GDPR, and SaaS Support |
 | **Skills** | 18 | Production workflows: HLD/LLD design, Wireframing & Prototyping, QA test automation, Turnkey scaffolding, DocType modeling, QueryBuilder, `hooks.py`, client scripts, REST APIs, permissions, TDD, background jobs, reports, patches, Bench CLI, Frappe UI, Portal |
-| **Commands** | 50 | Comprehensive slash commands for instant 1-line execution: `/frappe:auto`, `/frappe:prompt-to-app`, `/frappe:import-sheets`, `/frappe:voice`, `/frappe:ocr`, `/frappe:workflow`, `/frappe:dashboard`, `/frappe:chat-data`, `/frappe:sop`, `/frappe:saas`, etc. |
+| **Commands** | 51 | Comprehensive slash commands for instant 1-line execution: `/frappe:auto`, `/frappe:build-and-push`, `/frappe:prompt-to-app`, `/frappe:import-sheets`, `/frappe:voice`, `/frappe:ocr`, `/frappe:workflow`, `/frappe:dashboard`, `/frappe:chat-data`, `/frappe:sop`, `/frappe:saas`, etc. |
 | **Rules** | 5 | Always-loaded coding standards: Core architecture, Python backend, Desk JS, Security, and Database optimization |
 | **Frappe Shield** | Included | AST-based static security analyzer detecting SQLi in `frappe.db.sql`, `commit()` violations, and unvalidated guest APIs |
 
 ---
 
-## 🏛️ The 8 Enterprise Pillars & 52 Autonomous Agents
+## 🏛️ The 8 Enterprise Pillars & 53 Autonomous Agents
 
 ### Pillar 1: No-Code Front Door & Ingestion (5 Agents)
 | Agent | Responsibility |
@@ -100,10 +100,11 @@ It enables non-technical founders, operations managers, and enterprise IT leader
 | `frappe-accessibility-wcag-compliance` | WCAG 2.1 AA accessibility auditing & screen reader optimization |
 | `frappe-print-format-designer` | Print-ready Jinja2 HTML/CSS templates for invoices, slips & QR barcodes |
 
-### Pillar 6: Turnkey Development & Autonomous Healing (6 Agents)
+### Pillar 6: Turnkey Development & Autonomous Healing (7 Agents)
 | Agent | Responsibility |
 |---|---|
 | `frappe-fullstack-developer` | Turnkey end-to-end fullstack feature synthesis without placeholders |
+| `frappe-custom-app-git-builder` | Autonomous Custom App Architect & Git Publishing Specialist (scaffolding, testing & remote Git push) |
 | `frappe-backend-builder` | Python DocType controllers, lifecycle hooks & QueryBuilder |
 | `frappe-desk-builder` | Desk client scripts, form UI events, dialogs & buttons |
 | `frappe-data-synthesizer` | Domain-accurate seed fixtures (`fixtures/`) & relational test data |
@@ -137,10 +138,11 @@ It enables non-technical founders, operations managers, and enterprise IT leader
 
 ---
 
-## ⚡ Complete Roster of 50 Slash Commands
+## ⚡ Complete Roster of 51 Slash Commands
 
 ```
 /frappe:auto           - Autonomous end-to-end prompt-to-production pipeline
+/frappe:build-and-push - Build customized Frappe app from requirements and push directly to Git
 /frappe:prompt-to-app  - Instant 1-prompt application synthesizer
 /frappe:import-sheets  - Ingest Excel/CSV and synthesize relational DocTypes
 /frappe:voice          - Setup voice commands and spoken audio briefings
