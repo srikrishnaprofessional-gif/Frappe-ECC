@@ -217,11 +217,25 @@ python bin/frappe_agent_runner.py --pipeline autonomous --write-artifacts --out-
 python tests/test_all_53_agents.py
 ```
 
-### 🧪 Automated Test Suite & Results (100% Pass Rate)
-- **Comprehensive 53-Agent Test Report**: [FRAPPE_ALL_AGENTS_TEST_REPORT.md](docs/FRAPPE_ALL_AGENTS_TEST_REPORT.md)
-- **Test Results Data (JSON)**: [test_results.json](tests/test_results.json)
-- **Official Test Report (Word DOCX)**: Downloaded to `~/Downloads/FRAPPE_ALL_53_AGENTS_TEST_REPORT.docx`
-- **Official Test Report (Printable PDF)**: Downloaded to `~/Downloads/FRAPPE_ALL_53_AGENTS_TEST_REPORT.pdf`
+---
+
+## 🌐 Autonomous Local Machine Runtime & Real-Time Data Simulator (`http://localhost:8050`)
+
+Frappe ECC now includes a native **Autonomous Local Machine Runtime & Desk Simulator** enabling all 53 AI agents to run independently, develop enterprise applications in real time from natural language prompts, and run them locally with rich simulated data:
+
+### 1-Click Launchers
+- **Windows 1-Click Desktop Launcher**: Double-click [`Launch_Autonomous_Frappe_Studio.bat`](Launch_Autonomous_Frappe_Studio.bat) or [`installers/windows/Launch_FrappeAES_Studio.bat`](installers/windows/Launch_FrappeAES_Studio.bat)
+- **Direct CLI Runner**:
+  ```bash
+  python bin/frappe_runtime_server.py 8050
+  ```
+- **Access URL**: Open **`http://localhost:8050`** in any browser.
+
+### Key Capabilities
+1. **Autonomous Real-Time Development**: Enter any prompt (e.g. *"Build a Clinic EHR with Patient prescriptions and billing"*). The agents collaborate in real-time on the flight deck and hot-reload the application into the running Desk interface in seconds!
+2. **Enterprise Data Simulator**: Comes pre-seeded with 20-50 realistic domain records and includes an instant **"⚡ Stimulate 25 Records"** button to generate rich mock transactions with random realistic names, dates, currency amounts, and workflow states.
+3. **Full Frappe Desk Experience**: KPI Number Cards, interactive SVG charts, list views with status filters (`Draft`, `Under Review`, `Approved`, `Rejected`), and dynamic form drawers with live state machine actions (`Quick Approve`, `Reject`).
+4. **Complete REST API**: Full CRUD API endpoints (`/api/resource/{doctype}`, `/api/apps`, `/api/doctypes`, `/api/data/synthesize`, `/api/autonomous/build`).
 
 ---
 
