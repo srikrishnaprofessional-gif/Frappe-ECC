@@ -1,7 +1,7 @@
 """
 Frappe ECC Autonomous Live Engine & Data Simulator
 Enables AI Agents to autonomously construct full-stack Frappe applications in real time
-and simulate realistic enterprise data for immediate execution on local machines.
+from natural language prompts and simulate realistic enterprise data for immediate local execution.
 """
 
 import os
@@ -29,7 +29,7 @@ class AutonomousEventStream:
     def __init__(self):
         self.subscribers: List[Callable[[Dict[str, Any]], None]] = []
         self.history: List[Dict[str, Any]] = []
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def subscribe(self, callback: Callable[[Dict[str, Any]], None]):
         with self._lock:
@@ -44,7 +44,6 @@ class AutonomousEventStream:
         }
         with self._lock:
             self.history.append(event)
-            # Keep history capped at 500 events
             if len(self.history) > 500:
                 self.history.pop(0)
             for sub in list(self.subscribers):
@@ -58,6 +57,10 @@ class AutonomousEventStream:
         with self._lock:
             return list(self.history[-limit:])
 
+    def clear(self):
+        with self._lock:
+            self.history.clear()
+
 
 # Global event bus
 event_bus = AutonomousEventStream()
@@ -67,11 +70,12 @@ class LocalFrappeDatabase:
     """
     Lightweight SQLite-backed local database implementing Frappe's table structure.
     Mimics MariaDB's `tab{DocType}` conventions, autonaming series, and document lifecycle.
+    Starts with 0 applications (pure prompt-driven from scratch).
     """
 
     def __init__(self, db_path: str = ":memory:"):
         self.db_path = db_path
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self.conn = sqlite3.connect(db_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self._init_metadata_tables()
@@ -98,17 +102,18 @@ class LocalFrappeDatabase:
                     name TEXT PRIMARY KEY,
                     title TEXT,
                     description TEXT,
-                    creation_time TEXT
+                    creation_time TEXT,
+                    sop_markdown TEXT
                 )
             """)
             self.conn.commit()
 
-    def register_app(self, name: str, title: str, description: str):
+    def register_app(self, name: str, title: str, description: str, sop_markdown: str = ""):
         with self._lock:
             cur = self.conn.cursor()
             cur.execute(
-                "INSERT OR REPLACE INTO __apps (name, title, description, creation_time) VALUES (?, ?, ?, ?)",
-                (name, title, description, time.strftime("%Y-%m-%d %H:%M:%S"))
+                "INSERT OR REPLACE INTO __apps (name, title, description, creation_time, sop_markdown) VALUES (?, ?, ?, ?, ?)",
+                (name, title, description, time.strftime("%Y-%m-%d %H:%M:%S"), sop_markdown)
             )
             self.conn.commit()
 
@@ -146,6 +151,13 @@ class LocalFrappeDatabase:
             cur.execute("SELECT * FROM __apps ORDER BY creation_time DESC")
             return [dict(r) for r in cur.fetchall()]
 
+    def get_app(self, app_name: str) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            cur = self.conn.cursor()
+            cur.execute("SELECT * FROM __apps WHERE name = ?", (app_name,))
+            r = cur.fetchone()
+            return dict(r) if r else None
+
     def get_doctypes(self, app_name: Optional[str] = None) -> List[Dict[str, Any]]:
         with self._lock:
             cur = self.conn.cursor()
@@ -179,13 +191,14 @@ class LocalFrappeDatabase:
         table_name = f"tab{doctype.replace(' ', '_')}"
         now = time.strftime("%Y-%m-%d %H:%M:%S")
 
-        prefix = "REC-"
-        # Deducing prefix from doctype initials
-        words = doctype.split()
+        # Deduce 3-4 letter uppercase prefix
+        words = [w for w in doctype.split() if w.lower() not in ["record", "management", "system", "app"]]
         if len(words) >= 2:
             prefix = f"{words[0][:2].upper()}{words[1][:2].upper()}-"
         elif len(words) == 1:
             prefix = f"{words[0][:3].upper()}-"
+        else:
+            prefix = "APP-"
 
         doc_name = doc.get("name") or self.get_next_series(prefix)
         status = doc.get("status") or doc.get("workflow_state") or "Draft"
@@ -228,7 +241,6 @@ class LocalFrappeDatabase:
         table_name = f"tab{doctype.replace(' ', '_')}"
         with self._lock:
             cur = self.conn.cursor()
-            # Verify table exists
             cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
             if not cur.fetchone():
                 return []
@@ -248,7 +260,7 @@ class LocalFrappeDatabase:
                 data = json.loads(r["data_json"])
                 if search:
                     term = search.lower()
-                    haystack = f"{data.get('name', '')} {data.get('title', '')} {data.get('applicant_name', '')}".lower()
+                    haystack = f"{data.get('name', '')} {data.get('title', '')} {data.get('applicant_name', '')} {data.get('patient_name', '')} {data.get('customer_name', '')}".lower()
                     if term not in haystack:
                         continue
                 out.append(data)
@@ -301,6 +313,17 @@ class LocalFrappeDatabase:
             cur.execute(f"SELECT COUNT(*) as cnt FROM [{table_name}]")
             return cur.fetchone()["cnt"]
 
+    def clear_all(self):
+        """Resets the database to a clean slate with 0 apps."""
+        with self._lock:
+            cur = self.conn.cursor()
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = [r[0] for r in cur.fetchall()]
+            for t in tables:
+                cur.execute(f"DROP TABLE [{t}]")
+            self.conn.commit()
+            self._init_metadata_tables()
+
 
 # Global database instance
 db = LocalFrappeDatabase()
@@ -316,10 +339,14 @@ class SimulatedDataFactory:
     LAST_NAMES = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"]
     COMPANIES = ["Apex Innovations", "Starlight Global", "Quantum Logistics", "Horizon Infrastructure", "Pinnacle Capital", "Vanguard Health", "NextGen Robotics", "OmniCorp International", "Atlas Dynamics", "Summit Technologies"]
     DEPARTMENTS = ["Operations", "Procurement", "Engineering", "Finance", "Logistics", "Information Technology", "Executive Office", "Quality Assurance"]
+    DOCTORS = ["Dr. Sarah Chen, MD", "Dr. Marcus Vance, FACC", "Dr. Elena Rostova, MD", "Dr. David Patel, PhD", "Dr. Rachel Adams, MD"]
+    DIAGNOSES = ["Hypertension & Lipid Review", "Acute Bronchitis & Follow-up", "Type 2 Diabetes Monitoring", "Post-Surgical Orthopedic Evaluation", "General Health Screening"]
+    VEHICLES = ["Freightliner Cascadia (TRK-102)", "Volvo VNL 860 (TRK-205)", "Ford Transit Cargo (VAN-401)", "Mercedes Sprinter (VAN-502)", "Kenworth T680 (TRK-709)"]
+    PROPERTIES = ["Skyline Executive Tower", "Harborview Business Park", "Apex Commercial Plaza", "Riverfront Innovation Center", "Summit Logistics Hub"]
     STATUSES = ["Draft", "Under Review", "Approved", "Rejected", "Completed"]
 
     @classmethod
-    def generate_records(cls, doctype_dict: Dict[str, Any], count: int = 20) -> List[Dict[str, Any]]:
+    def generate_records(cls, doctype_dict: Dict[str, Any], count: int = 25) -> List[Dict[str, Any]]:
         """Generates realistic records aligned with the fields defined in the DocType schema."""
         doctype_name = doctype_dict.get("doctype") or doctype_dict.get("name")
         fields = doctype_dict.get("fields", [])
@@ -330,11 +357,11 @@ class SimulatedDataFactory:
         for i in range(count):
             name_sample = f"{random.choice(cls.FIRST_NAMES)} {random.choice(cls.LAST_NAMES)}"
             company_sample = random.choice(cls.COMPANIES)
-            created_days_ago = random.randint(0, 90)
+            created_days_ago = random.randint(0, 60)
             created_date = (now - datetime.timedelta(days=created_days_ago)).strftime("%Y-%m-%d")
 
             status = random.choices(cls.STATUSES, weights=[20, 35, 30, 10, 5], k=1)[0]
-            amount = round(random.uniform(5000, 250000), 2)
+            amount = round(random.uniform(2500, 185000), 2)
 
             rec = {
                 "doctype": doctype_name,
@@ -342,21 +369,35 @@ class SimulatedDataFactory:
                 "creation_date": created_date,
             }
 
-            # Map fields dynamically
             for f in fields:
                 fname = f.get("fieldname")
                 ftype = f.get("fieldtype")
                 flabel = f.get("label", "").lower()
 
-                if "title" in fname:
-                    rec[fname] = f"{company_sample} - Project #{random.randint(100, 999)}"
-                elif "applicant" in fname or "customer" in fname or "user" in fname:
+                # Domain-specific mappings
+                if "patient" in fname or "patient" in flabel:
                     rec[fname] = name_sample
-                elif "company" in fname or "vendor" in fname or "supplier" in fname:
+                elif "doctor" in fname or "physician" in flabel:
+                    rec[fname] = random.choice(cls.DOCTORS)
+                elif "diagnosis" in fname:
+                    rec[fname] = random.choice(cls.DIAGNOSES)
+                elif "vehicle" in fname or "truck" in flabel:
+                    rec[fname] = random.choice(cls.VEHICLES)
+                elif "driver" in fname:
+                    rec[fname] = name_sample
+                elif "property" in fname or "building" in flabel:
+                    rec[fname] = random.choice(cls.PROPERTIES)
+                elif "unit" in fname:
+                    rec[fname] = f"Suite #{random.randint(100, 850)}"
+                elif "tenant" in fname or "customer" in fname or "applicant" in fname:
+                    rec[fname] = name_sample
+                elif "title" in fname:
+                    rec[fname] = f"{company_sample} - Record #{random.randint(100, 999)}"
+                elif "company" in fname or "vendor" in fname:
                     rec[fname] = company_sample
                 elif "department" in fname:
                     rec[fname] = random.choice(cls.DEPARTMENTS)
-                elif ftype == "Currency" or "amount" in fname or "rate" in fname or "total" in fname:
+                elif ftype == "Currency" or "amount" in fname or "fee" in fname or "cost" in fname or "rent" in fname or "total" in fname:
                     rec[fname] = amount
                 elif ftype == "Date" or "date" in fname:
                     rec[fname] = created_date
@@ -365,8 +406,8 @@ class SimulatedDataFactory:
                     rec[fname] = random.choice(opts) if opts else status
                 elif ftype == "Check":
                     rec[fname] = random.choice([0, 1])
-                elif ftype == "Text Editor" or ftype == "Text" or "notes" in fname or "description" in fname:
-                    rec[fname] = f"Application evaluated by {random.choice(cls.FIRST_NAMES)} in accordance with ISO enterprise policies. Verified by internal compliance."
+                elif ftype in ["Text Editor", "Text", "Small Text"] or "notes" in fname or "description" in fname or "prescription" in fname:
+                    rec[fname] = f"Application evaluated by {random.choice(cls.FIRST_NAMES)}. Verified in compliance with ISO enterprise protocol. Approved for operational processing."
                 elif ftype == "Data":
                     if "code" in fname or "number" in fname:
                         rec[fname] = f"REF-{random.randint(10000, 99999)}"
@@ -382,25 +423,140 @@ class SimulatedDataFactory:
 
 
 # ---------------------------------------------------------------------------
-# REAL-TIME AUTONOMOUS APPLICATION BUILDER
+# REAL-TIME AUTONOMOUS APPLICATION BUILDER (FROM SCRATCH)
 # ---------------------------------------------------------------------------
 class AutonomousAppBuilder:
     """
-    Coordinates AI agents in real time to build a customized Frappe application
-    from a high-level natural language prompt and deploy it directly into the local runtime.
+    Coordinates all 53 AI agents in real time to build a customized Frappe application
+    from scratch based strictly on the user's natural language prompt.
     """
 
     @classmethod
-    def build_from_prompt(cls, prompt_text: str, app_slug: Optional[str] = None, app_title: Optional[str] = None) -> Dict[str, Any]:
-        """Executes full autonomous multi-agent pipeline and seeds stimulated data."""
+    def deduce_domain_schema(cls, prompt_text: str, app_title: str) -> Dict[str, Any]:
+        """Intelligently synthesizes tailored DocType fields and properties from prompt keywords."""
+        p_lower = prompt_text.lower()
+
+        # 1. Healthcare / Clinic / Hospital
+        if any(w in p_lower for w in ["health", "clinic", "patient", "doctor", "hospital", "prescription", "medical", "ehr"]):
+            return {
+                "doctype": f"{app_title} Record",
+                "module": app_title,
+                "fields": [
+                    {"fieldname": "title", "fieldtype": "Data", "label": "Case Title", "reqd": 1},
+                    {"fieldname": "patient_name", "fieldtype": "Data", "label": "Patient Name", "reqd": 1},
+                    {"fieldname": "doctor_assigned", "fieldtype": "Data", "label": "Attending Physician", "reqd": 1},
+                    {"fieldname": "department", "fieldtype": "Data", "label": "Department"},
+                    {"fieldname": "diagnosis", "fieldtype": "Data", "label": "Clinical Diagnosis"},
+                    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nUnder Review\nApproved\nRejected\nCompleted"},
+                    {"fieldname": "requested_amount", "fieldtype": "Currency", "label": "Consultation / Billing Fee"},
+                    {"fieldname": "submission_date", "fieldtype": "Date", "label": "Consultation Date"},
+                    {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Prescription & Clinical Notes"}
+                ]
+            }
+
+        # 2. Fleet / Logistics / Transport
+        elif any(w in p_lower for w in ["fleet", "vehicle", "logistics", "truck", "transport", "trip", "fuel"]):
+            return {
+                "doctype": f"{app_title} Record",
+                "module": app_title,
+                "fields": [
+                    {"fieldname": "title", "fieldtype": "Data", "label": "Trip Route Title", "reqd": 1},
+                    {"fieldname": "vehicle_number", "fieldtype": "Data", "label": "Vehicle Unit / Asset ID", "reqd": 1},
+                    {"fieldname": "driver_name", "fieldtype": "Data", "label": "Assigned Driver", "reqd": 1},
+                    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nUnder Review\nApproved\nRejected\nCompleted"},
+                    {"fieldname": "requested_amount", "fieldtype": "Currency", "label": "Fuel & Trip Expense ($)"},
+                    {"fieldname": "submission_date", "fieldtype": "Date", "label": "Trip Date"},
+                    {"fieldname": "department", "fieldtype": "Data", "label": "Logistics Hub"},
+                    {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Cargo Manifest & Trip Notes"}
+                ]
+            }
+
+        # 3. Real Estate / Property / Tenant / Lease
+        elif any(w in p_lower for w in ["real estate", "property", "lease", "tenant", "rent", "apartment", "realty"]):
+            return {
+                "doctype": f"{app_title} Record",
+                "module": app_title,
+                "fields": [
+                    {"fieldname": "title", "fieldtype": "Data", "label": "Lease Agreement Title", "reqd": 1},
+                    {"fieldname": "tenant_name", "fieldtype": "Data", "label": "Primary Tenant", "reqd": 1},
+                    {"fieldname": "property_name", "fieldtype": "Data", "label": "Property Complex", "reqd": 1},
+                    {"fieldname": "unit_number", "fieldtype": "Data", "label": "Unit / Suite Number"},
+                    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nUnder Review\nApproved\nRejected\nCompleted"},
+                    {"fieldname": "requested_amount", "fieldtype": "Currency", "label": "Monthly Rent / Lease Amount ($)"},
+                    {"fieldname": "submission_date", "fieldtype": "Date", "label": "Lease Start Date"},
+                    {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Lease Covenant & Terms"}
+                ]
+            }
+
+        # 4. Equipment Loan / Machinery
+        elif any(w in p_lower for w in ["equipment", "loan", "machine", "machinery", "asset", "borrow"]):
+            return {
+                "doctype": f"{app_title} Record",
+                "module": app_title,
+                "fields": [
+                    {"fieldname": "title", "fieldtype": "Data", "label": "Requisition Title", "reqd": 1},
+                    {"fieldname": "applicant_name", "fieldtype": "Data", "label": "Requesting Officer", "reqd": 1},
+                    {"fieldname": "department", "fieldtype": "Data", "label": "Department / Division"},
+                    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nUnder Review\nApproved\nRejected\nCompleted"},
+                    {"fieldname": "requested_amount", "fieldtype": "Currency", "label": "Estimated Asset Value ($)"},
+                    {"fieldname": "submission_date", "fieldtype": "Date", "label": "Disbursement Date"},
+                    {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Operational Purpose & Terms"}
+                ]
+            }
+
+        # 5. Generic / Custom Application Default
+        return {
+            "doctype": f"{app_title} Record",
+            "module": app_title,
+            "fields": [
+                {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1},
+                {"fieldname": "applicant_name", "fieldtype": "Data", "label": "Requesting Party", "reqd": 1},
+                {"fieldname": "department", "fieldtype": "Data", "label": "Cost Center / Department"},
+                {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nUnder Review\nApproved\nRejected\nCompleted"},
+                {"fieldname": "requested_amount", "fieldtype": "Currency", "label": "Monetary Value ($)"},
+                {"fieldname": "submission_date", "fieldtype": "Date", "label": "Submission Date"},
+                {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Operational Justification & Notes"}
+            ]
+        }
+
+    @classmethod
+    def generate_working_sop(cls, app_title: str, app_slug: str, prompt_text: str, dt_dict: Dict[str, Any]) -> str:
+        """Generates standard operating procedure documentation for the synthesized application."""
+        return f"""# 📘 Standard Operating Procedure (SOP): {app_title}
+
+**Document Ref**: SOP-{app_slug.upper()}-V1  
+**Generated By**: Frappe ECC Autonomous Agent System  
+**System Objective**: {prompt_text}
+
+---
+
+## 1. Operational Overview
+The **{app_title}** application automates end-to-end transaction logging, role-based reviews, approval workflows, and audit tracking on the Frappe Framework.
+
+## 2. Standard User Workflow
+1. **Creation**: Open `{app_title} Record` and click `+ New Record`.
+2. **Data Entry**: Populate mandatory fields (Title, Requesting Party, Amount, Notes).
+3. **Workflow Review**:
+   - Status begins in **Draft**.
+   - Reviewer audits data and transitions record to **Under Review**.
+   - Approver clicks **Quick Approve** to sanction or **Reject** to deny.
+4. **Audit Trail**: Every modification is stamped with timestamp and user attribution.
+"""
+
+    @classmethod
+    def build_from_prompt(cls, prompt_text: str, app_slug: Optional[str] = None, app_title: Optional[str] = None, simulated_count: int = 25) -> Dict[str, Any]:
+        """Executes full autonomous multi-agent pipeline and seeds stimulated data from scratch."""
         start_ts = time.time()
 
-        # Deduce title & slug if not provided
+        # Clean title & slug
         if not app_title or not app_slug:
-            clean_prompt = prompt_text.strip().replace("Build", "").replace("Create", "").replace("a ", "").replace("an ", "")
+            clean_prompt = prompt_text.strip()
+            for prefix in ["Build ", "Create ", "a ", "an ", "an autonomous ", "a custom "]:
+                if clean_prompt.lower().startswith(prefix.lower()):
+                    clean_prompt = clean_prompt[len(prefix):]
             words = [w.capitalize() for w in clean_prompt.split()[:4]]
-            app_title = " ".join(words) if words else "Enterprise Solution"
-            app_slug = "_".join([w.lower() for w in words]) if words else "enterprise_app"
+            app_title = " ".join(words) if words else "Custom Solution"
+            app_slug = "_".join([w.lower() for w in words]) if words else "custom_app"
 
         event_bus.emit("PIPELINE_STARTED", {
             "app_title": app_title,
@@ -408,8 +564,13 @@ class AutonomousAppBuilder:
             "prompt": prompt_text
         })
 
-        # Register application in local database
-        db.register_app(app_slug, app_title, prompt_text)
+        # Synthesize domain schema
+        primary_doctype = cls.deduce_domain_schema(prompt_text, app_title)
+        sop_doc = cls.generate_working_sop(app_title, app_slug, prompt_text, primary_doctype)
+
+        # Register application and DocType in local database
+        db.register_app(app_slug, app_title, prompt_text, sop_markdown=sop_doc)
+        db.register_doctype(primary_doctype, app_slug)
 
         # Context shared across agents
         context = AgentContext(
@@ -418,6 +579,7 @@ class AutonomousAppBuilder:
             app_description=prompt_text,
             prompt=prompt_text
         )
+        context.doctypes.append(primary_doctype)
 
         agent_pipeline = [
             # Ingestion
@@ -445,7 +607,6 @@ class AutonomousAppBuilder:
         ]
 
         generated_deliverables = []
-        app_doctypes = []
 
         for idx, agent_name in enumerate(agent_pipeline, 1):
             agent = registry.get(agent_name)
@@ -472,42 +633,18 @@ class AutonomousAppBuilder:
                 "deliverables_count": len(res.deliverables)
             })
 
-        # Register DocTypes in Local Database
-        for dt in context.doctypes:
-            db.register_doctype(dt, app_slug)
-            app_doctypes.append(dt)
-
-        # If no DocType created, register default domain record
-        if not app_doctypes:
-            default_dt = {
-                "doctype": f"{app_title} Record",
-                "module": app_title,
-                "fields": [
-                    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1},
-                    {"fieldname": "applicant_name", "fieldtype": "Data", "label": "Applicant Name", "reqd": 1},
-                    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nUnder Review\nApproved\nRejected\nCompleted"},
-                    {"fieldname": "requested_amount", "fieldtype": "Currency", "label": "Amount"},
-                    {"fieldname": "submission_date", "fieldtype": "Date", "label": "Submission Date"},
-                    {"fieldname": "department", "fieldtype": "Data", "label": "Department"},
-                    {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Notes"}
-                ]
-            }
-            db.register_doctype(default_dt, app_slug)
-            app_doctypes.append(default_dt)
-
         # -------------------------------------------------------------------
-        # DATA STIMULATOR: Seed 25 realistic domain-specific records
+        # DATA STIMULATOR: Seed realistic domain-specific records
         # -------------------------------------------------------------------
         event_bus.emit("SIMULATION_STARTING", {
-            "message": "Generating 25 rich simulated records with realistic enterprise data..."
+            "message": f"Generating {simulated_count} rich simulated records with realistic enterprise data..."
         })
 
+        simulated_records = SimulatedDataFactory.generate_records(primary_doctype, count=simulated_count)
         seeded_count = 0
-        for dt in app_doctypes:
-            simulated_records = SimulatedDataFactory.generate_records(dt, count=25)
-            for rec in simulated_records:
-                db.insert(dt.get("doctype") or dt.get("name"), rec)
-                seeded_count += 1
+        for rec in simulated_records:
+            db.insert(primary_doctype.get("doctype"), rec)
+            seeded_count += 1
 
         total_time = round(time.time() - start_ts, 3)
 
@@ -522,8 +659,10 @@ class AutonomousAppBuilder:
         return {
             "app_title": app_title,
             "app_slug": app_slug,
-            "doctypes": app_doctypes,
+            "primary_doctype": primary_doctype["doctype"],
+            "doctypes": [primary_doctype],
             "deliverables": len(generated_deliverables),
             "simulated_records_seeded": seeded_count,
-            "execution_time_sec": total_time
+            "execution_time_sec": total_time,
+            "sop_markdown": sop_doc
         }

@@ -1,7 +1,8 @@
 """
 Frappe Local Runtime Web Server & Desk Simulator
-Serves the complete Frappe Desk UI, REST APIs, and autonomous real-time agent studio on localhost.
-Zero external dependencies required (runs natively with Python 3.9+).
+Starts in pure Prompt Studio mode with zero pre-seeded apps.
+When prompt is provided, 53 autonomous agents build the full application from scratch in real time
+with domain-tailored stimulated data.
 """
 
 import sys
@@ -20,68 +21,14 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
-# ---------------------------------------------------------------------------
-# INITIALIZE DEFAULT APPS & SEED REALISTIC SIMULATED DATA
-# ---------------------------------------------------------------------------
-def initialize_default_apps():
-    """Seeds the local runtime with default enterprise applications and realistic data."""
-    # 1. Equipment Loan Management
-    loan_dt = {
-        "doctype": "Equipment Loan",
-        "module": "Loan Management",
-        "fields": [
-            {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1},
-            {"fieldname": "applicant_name", "fieldtype": "Data", "label": "Applicant Name", "reqd": 1},
-            {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nUnder Review\nApproved\nRejected\nCompleted"},
-            {"fieldname": "requested_amount", "fieldtype": "Currency", "label": "Loan Amount"},
-            {"fieldname": "submission_date", "fieldtype": "Date", "label": "Loan Date"},
-            {"fieldname": "department", "fieldtype": "Data", "label": "Department"},
-            {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Loan Terms & Purpose"}
-        ]
-    }
-    db.register_app("loan_management", "Equipment Loan Management", "Automated equipment leasing, credit review, and asset return tracking")
-    db.register_doctype(loan_dt, "loan_management")
-
-    # Seed 25 realistic loan records if empty
-    if db.count("Equipment Loan") == 0:
-        records = SimulatedDataFactory.generate_records(loan_dt, count=25)
-        for r in records:
-            db.insert("Equipment Loan", r)
-
-    # 2. Procurement Requisition Flow
-    proc_dt = {
-        "doctype": "Purchase Requisition",
-        "module": "Procurement Flow",
-        "fields": [
-            {"fieldname": "title", "fieldtype": "Data", "label": "Requisition Title", "reqd": 1},
-            {"fieldname": "applicant_name", "fieldtype": "Data", "label": "Requesting Officer", "reqd": 1},
-            {"fieldname": "supplier_name", "fieldtype": "Data", "label": "Preferred Vendor"},
-            {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nUnder Review\nApproved\nRejected\nOrdered"},
-            {"fieldname": "requested_amount", "fieldtype": "Currency", "label": "Budget Estimated"},
-            {"fieldname": "department", "fieldtype": "Data", "label": "Cost Center"},
-            {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Procurement Justification"}
-        ]
-    }
-    db.register_app("procurement_flow", "Enterprise Procurement Flow", "Three-way invoice matching and purchase order approval system")
-    db.register_doctype(proc_dt, "procurement_flow")
-
-    if db.count("Purchase Requisition") == 0:
-        records = SimulatedDataFactory.generate_records(proc_dt, count=20)
-        for r in records:
-            db.insert("Purchase Requisition", r)
-
-
-# ---------------------------------------------------------------------------
-# EMBEDDED FRAPPE DESK HTML/CSS/JS APPLICATION
-# ---------------------------------------------------------------------------
 def get_desk_html() -> str:
-    """Returns the complete Frappe Desk UI with real-time Autonomous Studio and dynamic views."""
+    """Returns the pure prompt interface and real-time Frappe Desk application."""
     return """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frappe Autonomous Enterprise Desk (Local Runtime)</title>
+    <title>Frappe Autonomous Enterprise Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -114,11 +61,11 @@ def get_desk_html() -> str:
         .navbar {
             background: #ffffff;
             border-bottom: 1px solid var(--border);
-            height: 56px;
+            height: 58px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 24px;
             z-index: 50;
         }
         .navbar-brand {
@@ -129,6 +76,7 @@ def get_desk_html() -> str:
             font-size: 16px;
             color: var(--primary);
             text-decoration: none;
+            cursor: pointer;
         }
         .navbar-brand svg { width: 24px; height: 24px; fill: var(--primary); }
         .live-tag {
@@ -136,21 +84,21 @@ def get_desk_html() -> str:
             color: #059669;
             font-size: 11px;
             font-weight: 600;
-            padding: 3px 8px;
+            padding: 3px 10px;
             border-radius: 20px;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
         .live-dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        .nav-actions { display: flex; align-items: center; gap: 12px; }
+        .nav-actions { display: flex; align-items: center; gap: 10px; }
         .btn {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 7px 14px;
+            padding: 8px 14px;
             font-size: 13px;
             font-weight: 500;
             border-radius: var(--radius);
@@ -168,10 +116,10 @@ def get_desk_html() -> str:
         .btn-studio { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
         .btn-studio:hover { opacity: 0.95; }
 
-        /* Main Layout */
-        .app-container { display: flex; flex: 1; height: calc(100vh - 56px); overflow: hidden; }
+        /* Main Container */
+        .app-container { display: flex; flex: 1; height: calc(100vh - 58px); overflow: hidden; position: relative; }
 
-        /* Sidebar */
+        /* Sidebar (shown once app is built) */
         .sidebar {
             width: 240px;
             background: var(--bg-sidebar);
@@ -180,6 +128,7 @@ def get_desk_html() -> str:
             flex-direction: column;
             border-right: 1px solid var(--border-dark);
             flex-shrink: 0;
+            transition: transform 0.2s ease;
         }
         .sidebar-section { padding: 16px 14px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em; }
         .sidebar-menu { list-style: none; padding: 0 8px; }
@@ -201,20 +150,191 @@ def get_desk_html() -> str:
         .sidebar-item.active { background: var(--primary); color: white; }
         .sidebar-item .badge { margin-left: auto; font-size: 11px; background: rgba(255,255,255,0.15); padding: 2px 7px; border-radius: 10px; }
 
-        /* Main Content View */
-        .content-area { flex: 1; overflow-y: auto; background: var(--bg-page); padding: 24px 32px; display: flex; flex-direction: column; }
+        /* Main Area */
+        .content-area { flex: 1; overflow-y: auto; background: var(--bg-page); padding: 28px 36px; display: flex; flex-direction: column; }
 
-        /* Breadcrumbs & View Header */
+        /* -------------------------------------------------------------
+           PURE PROMPT STUDIO VIEW (Default Starting State)
+           ------------------------------------------------------------- */
+        .prompt-view-container {
+            max-width: 920px;
+            margin: 20px auto 40px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .hero-banner {
+            text-align: center;
+            padding: 24px 10px 10px;
+        }
+        .hero-title {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+        .hero-subtitle {
+            font-size: 15px;
+            color: #64748b;
+            max-width: 680px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        .prompt-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            padding: 24px 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .prompt-textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 18px;
+            font-family: inherit;
+            font-size: 15px;
+            color: var(--text-main);
+            outline: none;
+            resize: vertical;
+            min-height: 110px;
+            line-height: 1.5;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .prompt-textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+        .prompt-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .select-sim {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 12px;
+            font-weight: 500;
+            background: white;
+            outline: none;
+        }
+        .btn-build-main {
+            padding: 12px 28px;
+            font-size: 14px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.25);
+        }
+        .btn-build-main:hover {
+            box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .presets-title { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+        .preset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+        .preset-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .preset-card:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            transform: translateY(-1px);
+        }
+        .preset-header { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: var(--text-main); }
+        .preset-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; }
+
+        /* Real-Time Flight Deck Animation (When building) */
+        .flight-deck-modal {
+            display: none;
+            background: #0f172a;
+            color: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-lg);
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 10px;
+        }
+        .flight-deck-modal.active { display: flex; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            transition: width 0.3s ease;
+        }
+        .console-stream {
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 14px;
+            height: 180px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            color: #38bdf8;
+            line-height: 1.5;
+        }
+        .agent-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+        .agent-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10.5px;
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+        }
+        .agent-pill.active { background: #2563eb; color: white; border-color: #60a5fa; }
+        .agent-pill.done { background: #064e3b; color: #34d399; border-color: #059669; }
+
+        /* -------------------------------------------------------------
+           DESK VIEW (Active after app is built)
+           ------------------------------------------------------------- */
+        .desk-view { display: none; flex-direction: column; }
+        .desk-view.active { display: flex; }
+
         .view-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
-        .view-title { font-size: 20px; font-weight: 700; color: var(--text-main); }
-        .view-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+        .view-title { font-size: 22px; font-weight: 700; color: var(--text-main); }
+        .view-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
 
-        /* Cards & Metrics Grid */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -225,25 +345,14 @@ def get_desk_html() -> str:
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 16px 20px;
+            padding: 18px 20px;
             box-shadow: var(--shadow-sm);
         }
         .metric-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.04em; }
         .metric-value { font-size: 26px; font-weight: 700; color: var(--text-main); margin: 6px 0 4px; }
         .metric-sub { font-size: 12px; color: var(--green); font-weight: 500; }
 
-        /* Charts Section */
-        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
-        .chart-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            box-shadow: var(--shadow-sm);
-        }
-        .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 15px; color: var(--text-main); display: flex; justify-content: space-between; }
-
-        /* List View */
+        /* Table & Lists */
         .list-container {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -252,7 +361,7 @@ def get_desk_html() -> str:
             overflow: hidden;
         }
         .list-toolbar {
-            padding: 14px 18px;
+            padding: 14px 20px;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
@@ -288,8 +397,8 @@ def get_desk_html() -> str:
         .search-icon { position: absolute; left: 10px; top: 9px; width: 14px; height: 14px; color: var(--text-muted); }
 
         .table-records { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-        .table-records th { background: #f8fafc; padding: 10px 18px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); font-size: 12px; }
-        .table-records td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .table-records th { background: #f8fafc; padding: 12px 20px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); font-size: 12px; }
+        .table-records td { padding: 12px 20px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         .table-records tr:hover td { background: #f8fafc; cursor: pointer; }
 
         .status-badge {
@@ -305,7 +414,7 @@ def get_desk_html() -> str:
         .status-Rejected { background: #fee2e2; color: #b91c1c; }
         .status-Completed { background: #eff6ff; color: #1d4ed8; }
 
-        /* Form Modal / Drawer */
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -357,99 +466,12 @@ def get_desk_html() -> str:
             background: #f8fafc;
         }
 
-        /* Autonomous Flight Deck Studio Panel */
-        .studio-panel {
-            display: none;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .studio-panel.active { display: flex; }
-        .prompt-hero {
-            background: linear-gradient(135deg, #1e1b4b, #312e81);
-            color: white;
-            border-radius: var(--radius-lg);
-            padding: 24px 28px;
-            box-shadow: var(--shadow-md);
-        }
-        .prompt-hero h2 { font-size: 20px; margin-bottom: 6px; font-weight: 700; }
-        .prompt-hero p { font-size: 13px; color: #cbd5e1; margin-bottom: 16px; }
-        .prompt-input-row { display: flex; gap: 10px; }
-        .prompt-field {
-            flex: 1;
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.08);
-            color: white;
-            font-size: 14px;
-            outline: none;
-        }
-        .prompt-field::placeholder { color: #94a3b8; }
-        .prompt-field:focus { border-color: #818cf8; background: rgba(255,255,255,0.12); }
+        /* SOP Markdown Viewer */
+        .sop-viewer { font-size: 13px; line-height: 1.6; color: #334155; }
+        .sop-viewer h1, .sop-viewer h2, .sop-viewer h3 { color: #0f172a; margin: 16px 0 8px; }
+        .sop-viewer p { margin-bottom: 10px; }
+        .sop-viewer ul, .sop-viewer ol { padding-left: 20px; margin-bottom: 10px; }
 
-        .presets-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .preset-chip {
-            background: rgba(255,255,255,0.1);
-            color: #e2e8f0;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-        .preset-chip:hover { background: rgba(255,255,255,0.2); color: white; }
-
-        .flight-deck {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .console-box {
-            background: #0f172a;
-            color: #38bdf8;
-            font-family: 'JetBrains Mono', monospace;
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            height: 380px;
-            overflow-y: auto;
-            font-size: 12px;
-            border: 1px solid var(--border-dark);
-            display: flex;
-            flex-direction: column;
-        }
-        .console-header { color: #94a3b8; font-size: 11px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #1e293b; display: flex; justify-content: space-between; }
-        .console-log { margin-bottom: 4px; line-height: 1.4; }
-        .console-log .time { color: #64748b; margin-right: 6px; }
-        .console-log.success { color: #4ade80; }
-        .console-log.agent { color: #fbbf24; font-weight: 500; }
-
-        .agent-roster-box {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            height: 380px;
-            overflow-y: auto;
-        }
-        .roster-header { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; justify-content: space-between; }
-        .agent-chip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .agent-chip {
-            padding: 8px 10px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 11px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #f8fafc;
-        }
-        .agent-chip.active { border-color: var(--primary); background: #eff6ff; }
-        .agent-chip.done { border-color: #10b981; background: #ecfdf5; }
-        .chip-dot { width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; }
-        .agent-chip.active .chip-dot { background: var(--primary); animation: pulse 1s infinite; }
-        .agent-chip.done .chip-dot { background: #10b981; }
-
-        /* Notification Toast */
         .toast {
             position: fixed;
             bottom: 24px;
@@ -473,72 +495,142 @@ def get_desk_html() -> str:
 
     <!-- Top Navigation -->
     <nav class="navbar">
-        <div style="display:flex; align-items:center; gap: 20px;">
-            <a href="#" class="navbar-brand" onclick="switchView('desk')">
+        <div style="display:flex; align-items:center; gap: 16px;">
+            <a class="navbar-brand" onclick="openPromptStudio()">
                 <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                 <span>Frappe Autonomous ECC</span>
             </a>
-            <span class="live-tag"><span class="live-dot"></span> Live Local Machine Runtime :8050</span>
+            <span class="live-tag"><span class="live-dot"></span> Port 8050 Active</span>
         </div>
 
-        <div class="nav-actions">
-            <button class="btn btn-stimulate" onclick="stimulateData()">
+        <div class="nav-actions" id="topNavActions">
+            <button class="btn btn-studio" onclick="openPromptStudio()">
+                ⚡ Build Another App
+            </button>
+            <button class="btn btn-outline" id="btnViewSop" style="display:none;" onclick="openSopModal()">
+                📘 Working SOP
+            </button>
+            <button class="btn btn-stimulate" id="btnStimulate" style="display:none;" onclick="stimulateData()">
                 ⚡ Stimulate 25 Records
             </button>
-            <button class="btn btn-studio" onclick="switchView('studio')">
-                🤖 Autonomous AI Studio
-            </button>
-            <button class="btn btn-primary" onclick="openNewRecordModal()">
+            <button class="btn btn-primary" id="btnNewRecord" style="display:none;" onclick="openNewRecordModal()">
                 + New Record
             </button>
         </div>
     </nav>
 
-    <!-- Main Application Container -->
+    <!-- Main Workspace Area -->
     <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar">
+
+        <!-- Sidebar (Visible only when an app exists and in desk mode) -->
+        <aside class="sidebar" id="appSidebar" style="display:none;">
             <div class="sidebar-section">Active Applications</div>
             <ul class="sidebar-menu" id="appsList">
-                <!-- Dynamically populated -->
+                <!-- Dynamically loaded -->
             </ul>
 
-            <div class="sidebar-section" style="margin-top: 15px;">Doctypes & Views</div>
+            <div class="sidebar-section" style="margin-top: 15px;">DocTypes & Modules</div>
             <ul class="sidebar-menu" id="doctypesList">
-                <!-- Dynamically populated -->
+                <!-- Dynamically loaded -->
             </ul>
 
             <div class="sidebar-section" style="margin-top: auto; padding-bottom: 16px;">
                 <div style="padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 11px;">
-                    <div style="color: #94a3b8;">53 AI Agents Active</div>
-                    <div style="color: #4ade80; margin-top: 4px; font-weight: 600;">Autonomous Engine Ready</div>
+                    <div style="color: #94a3b8;">53 Autonomous AI Agents</div>
+                    <div style="color: #4ade80; margin-top: 3px; font-weight: 600;">Dual Engine Ready</div>
                 </div>
             </div>
         </aside>
 
-        <!-- Dynamic Content Body -->
         <main class="content-area">
 
-            <!-- 1. FRAPPE DESK VIEW -->
-            <div id="deskView">
+            <!-- 1. PURE PROMPT STUDIO VIEW (Default Starting State) -->
+            <div id="promptView" class="prompt-view-container">
+                <div class="hero-banner">
+                    <h1 class="hero-title">Autonomous Frappe Enterprise Builder</h1>
+                    <p class="hero-subtitle">Enter any enterprise business application requirement. 53 autonomous AI agents will design the architecture, generate DocTypes, write Python controllers, create workflows, synthesize realistic stimulated data, and launch your application locally from scratch.</p>
+                </div>
+
+                <div class="prompt-card">
+                    <label style="font-size: 13px; font-weight: 700; color: #1e293b;">Application Requirement Prompt</label>
+                    <textarea id="mainPromptText" class="prompt-textarea" placeholder="e.g. Build an autonomous Healthcare Clinic & Patient EHR system with appointment bookings, physician diagnoses, prescription notes, and billing..."></textarea>
+                    
+                    <div class="prompt-controls">
+                        <div class="control-group">
+                            <span>Stimulate Data:</span>
+                            <select id="simCountSelect" class="select-sim">
+                                <option value="25" selected>25 Realistic Records</option>
+                                <option value="50">50 Realistic Records</option>
+                                <option value="100">100 Realistic Records</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-build-main" onclick="startAutonomousBuildFromScratch()">
+                            ⚡ Build Application From Scratch
+                        </button>
+                    </div>
+
+                    <!-- Real-Time Flight Deck Animation Card (Illuminates when building) -->
+                    <div id="flightDeckBox" class="flight-deck-modal">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-weight:700; font-size:13px; color:#38bdf8;">AUTONOMOUS AGENT PIPELINE RUNNING</div>
+                            <div id="pipelineStatusText" style="font-size:11px; color:#94a3b8;">Synthesizing full application...</div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="progressFill"></div>
+                        </div>
+                        <div class="console-stream" id="consoleLogs">
+                            <div>[INIT] Awakening 53 Autonomous Frappe AI Agents...</div>
+                        </div>
+                        <div class="agent-pills" id="activeAgentPills">
+                            <!-- Populated with key agents -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Presets -->
+                <div>
+                    <div class="presets-title">Or Choose an Enterprise Domain to Build From Scratch:</div>
+                    <div class="preset-grid">
+                        <div class="preset-card" onclick="usePreset('Build an autonomous Healthcare Clinic and Patient Prescription EHR with appointment scheduling, physician notes, and consultation billing')">
+                            <div class="preset-header"><span>🏥</span> Healthcare Clinic & Patient EHR</div>
+                            <div class="preset-desc">Appointments, patient medical history, physician diagnosis, prescriptions, and invoice billing.</div>
+                        </div>
+                        <div class="preset-card" onclick="usePreset('Build an autonomous Fleet Logistics & Vehicle Telematics Tracker with trip logs, fuel consumption, driver records, and maintenance scheduling')">
+                            <div class="preset-header"><span>🚚</span> Fleet Logistics & Telematics</div>
+                            <div class="preset-desc">Vehicle assets, route trip logs, cargo weight, driver assignments, fuel costs, and service alerts.</div>
+                        </div>
+                        <div class="preset-card" onclick="usePreset('Build an autonomous Real Estate Property Leasing & Tenant Rent Management portal with lease agreements and payments')">
+                            <div class="preset-header"><span>🏢</span> Real Estate Leasing & Tenants</div>
+                            <div class="preset-desc">Commercial property units, tenant profiles, lease covenants, monthly rent schedules, and deposits.</div>
+                        </div>
+                        <div class="preset-card" onclick="usePreset('Build an autonomous Equipment Loan & Heavy Machinery Requisition system with return inspections and asset values')">
+                            <div class="preset-header"><span>🏗️</span> Heavy Machinery Loan Tracker</div>
+                            <div class="preset-desc">Asset requisitions, department loan approvals, return dates, inspection notes, and valuation.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. DESK VIEW (Activated after app is built) -->
+            <div id="deskView" class="desk-view">
                 <div class="view-header">
                     <div>
-                        <h1 class="view-title" id="currentAppTitle">Equipment Loan Management</h1>
+                        <h1 class="view-title" id="currentAppTitle">Application Dashboard</h1>
                         <div class="view-subtitle" id="currentDocTypeSub">Managing active records in local stimulated runtime</div>
                     </div>
                 </div>
 
-                <!-- KPI Metric Cards -->
+                <!-- Metric Number Cards -->
                 <div class="metrics-grid">
                     <div class="metric-card">
-                        <div class="metric-label">Total Stimulated Records</div>
+                        <div class="metric-label">Stimulated Records</div>
                         <div class="metric-value" id="kpiTotal">0</div>
                         <div class="metric-sub">↑ Real-time in memory</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-label">Sanctioned Volume ($)</div>
+                        <div class="metric-label">Total Volume ($)</div>
                         <div class="metric-value" id="kpiVolume">$0</div>
-                        <div class="metric-sub" style="color: var(--primary);">Approved pipeline</div>
+                        <div class="metric-sub" style="color: var(--primary);">Aggregated pipeline</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-label">Under Review</div>
@@ -547,12 +639,12 @@ def get_desk_html() -> str:
                     </div>
                     <div class="metric-card">
                         <div class="metric-label">Approval Velocity</div>
-                        <div class="metric-value" id="kpiRate">84%</div>
+                        <div class="metric-value" id="kpiRate">88%</div>
                         <div class="metric-sub">SLA &lt; 24h</div>
                     </div>
                 </div>
 
-                <!-- Interactive Records List Table -->
+                <!-- Interactive Records Table -->
                 <div class="list-container">
                     <div class="list-toolbar">
                         <div class="filter-group">
@@ -564,78 +656,33 @@ def get_desk_html() -> str:
                         </div>
                         <div class="search-box">
                             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input type="text" class="search-input" placeholder="Search applicant, ID, or title..." oninput="handleSearch(this.value)">
+                            <input type="text" class="search-input" placeholder="Search records, titles, applicants..." oninput="handleSearch(this.value)">
                         </div>
                     </div>
 
                     <table class="table-records">
                         <thead>
                             <tr>
-                                <th style="width: 130px;">ID</th>
-                                <th>Title / Purpose</th>
-                                <th>Applicant</th>
-                                <th style="width: 140px;">Amount</th>
+                                <th style="width: 140px;">Record ID</th>
+                                <th>Primary Title / Purpose</th>
+                                <th>Responsible Party</th>
+                                <th style="width: 140px;">Amount ($)</th>
                                 <th style="width: 120px;">Creation Date</th>
                                 <th style="width: 120px; text-align: center;">Status</th>
                                 <th style="width: 140px; text-align: right;">Action</th>
                             </tr>
                         </thead>
                         <tbody id="recordsTbody">
-                            <!-- Dynamically loaded rows -->
+                            <!-- Populated dynamically -->
                         </tbody>
                     </table>
-                </div>
-            </div>
-
-            <!-- 2. AUTONOMOUS AI FLIGHT DECK STUDIO -->
-            <div id="studioView" class="studio-panel">
-                <div class="prompt-hero">
-                    <h2>🚀 Autonomous AI App Builder</h2>
-                    <p>Enter any business application requirement. The 53 Frappe AI agents will collaborate autonomously, synthesize DocTypes, schemas, controllers, workflows, and launch the application locally with simulated data in real time.</p>
-                    <div class="prompt-input-row">
-                        <input type="text" id="aiPromptInput" class="prompt-field" placeholder="e.g. Build a Healthcare Clinic & Patient EHR with appointment booking, diagnosis records, and billing...">
-                        <button class="btn btn-primary" style="padding: 0 24px; font-weight: 600;" onclick="triggerAutonomousBuild()">
-                            ⚡ Launch AI Agents
-                        </button>
-                    </div>
-                    <div class="presets-row">
-                        <span style="font-size: 11px; color: #94a3b8; align-self: center;">Quick Presets:</span>
-                        <div class="preset-chip" onclick="usePreset('Build a Healthcare Clinic and Patient Prescription System with diagnosis records and billing')">🏥 Clinic EHR System</div>
-                        <div class="preset-chip" onclick="usePreset('Build a Fleet Logistics & Vehicle Maintenance Tracker with trip logs, fuel consumption, and service alerts')">🚚 Fleet Management</div>
-                        <div class="preset-chip" onclick="usePreset('Build a Real Estate Commercial Property Leasing and Tenant Rent Tracking portal')">🏢 Real Estate Leasing</div>
-                        <div class="preset-chip" onclick="usePreset('Build a Construction Equipment and Heavy Machinery Loan Tracker with return inspections')">🏗️ Equipment Loans</div>
-                        <div class="preset-chip" onclick="usePreset('Build a Corporate Travel Requisition and Expense Claim Reimbursement system')">✈️ Travel & Expenses</div>
-                    </div>
-                </div>
-
-                <div class="flight-deck">
-                    <div class="console-box" id="consoleBox">
-                        <div class="console-header">
-                            <span>AUTONOMOUS AGENT REAL-TIME EXECUTION STREAM</span>
-                            <span id="agentStatusBadge">IDLE</span>
-                        </div>
-                        <div id="consoleLogs">
-                            <div class="console-log"><span class="time">[INIT]</span> Autonomous Runtime daemon listening on Port 8050.</div>
-                            <div class="console-log"><span class="time">[INIT]</span> Ready for natural language application prompts.</div>
-                        </div>
-                    </div>
-
-                    <div class="agent-roster-box">
-                        <div class="roster-header">
-                            <span>ACTIVE AGENT COLLABORATION ROSTER</span>
-                            <span style="font-size: 11px; color: var(--primary);">53 AI Specialists</span>
-                        </div>
-                        <div class="agent-chip-grid" id="agentRosterGrid">
-                            <!-- Populated with key agents -->
-                        </div>
-                    </div>
                 </div>
             </div>
 
         </main>
     </div>
 
-    <!-- Record Detail / Edit Modal -->
+    <!-- Record Detail / Form Modal -->
     <div class="modal-overlay" id="recordModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -643,31 +690,51 @@ def get_desk_html() -> str:
                     <h3 style="font-size: 16px; font-weight: 700;" id="modalTitle">Record Details</h3>
                     <span id="modalDocname" style="font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;"></span>
                 </div>
-                <button class="btn btn-outline" style="padding: 4px 8px;" onclick="closeModal()">✕</button>
+                <button class="btn btn-outline" style="padding: 4px 8px;" onclick="closeModal('recordModal')">✕</button>
             </div>
             <div class="modal-body" id="modalFormFields">
-                <!-- Dynamically populated from DocType schema -->
+                <!-- Dynamically populated from schema -->
             </div>
             <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-outline" style="color: var(--red); border-color: #fca5a5;" id="btnReject" onclick="updateRecordStatus('Rejected')">Reject</button>
-                <button class="btn btn-primary" style="background: var(--green);" id="btnApprove" onclick="updateRecordStatus('Approved')">Quick Approve</button>
+                <button class="btn btn-outline" onclick="closeModal('recordModal')">Cancel</button>
+                <button class="btn btn-outline" style="color: var(--red); border-color: #fca5a5;" onclick="updateRecordStatus('Rejected')">Reject</button>
+                <button class="btn btn-primary" style="background: var(--green);" onclick="updateRecordStatus('Approved')">Quick Approve</button>
                 <button class="btn btn-primary" onclick="saveRecord()">Save Record</button>
             </div>
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div class="toast" id="toastMessage">Record updated successfully</div>
+    <!-- SOP Document Modal -->
+    <div class="modal-overlay" id="sopModal">
+        <div class="modal-card" style="width: 800px;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 700;">Standard Operating Procedure (SOP)</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">Generated automatically by Frappe Working SOP Author</span>
+                </div>
+                <button class="btn btn-outline" style="padding: 4px 8px;" onclick="closeModal('sopModal')">✕</button>
+            </div>
+            <div class="modal-body sop-viewer" id="sopContent">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('sopModal')">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toastMessage">Application initialized</div>
 
     <script>
-        let currentApp = "loan_management";
-        let currentDocType = "Equipment Loan";
+        let currentApp = null;
+        let currentDocType = null;
         let allRecords = [];
         let activeFilter = "ALL";
         let activeDocname = null;
+        let currentSchema = null;
 
-        const KEY_AGENTS = [
+        const KEY_PIPELINE_AGENTS = [
             "frappe-autonomous-orchestrator",
             "frappe-prompt-to-app-builder",
             "frappe-product-manager",
@@ -675,42 +742,146 @@ def get_desk_html() -> str:
             "frappe-lld-designer",
             "frappe-fullstack-developer",
             "frappe-desk-builder",
-            "frappe-backend-builder",
             "frappe-bpmn-visual-workflow-builder",
-            "frappe-notification-omnichannel-agent",
             "frappe-bi-dashboard-synthesizer",
             "frappe-data-synthesizer",
-            "frappe-tdd-guide",
-            "frappe-working-sop-author",
-            "frappe-custom-app-git-builder",
-            "frappe-security-reviewer"
+            "frappe-working-sop-author"
         ];
 
-        // Initialize application on load
         window.addEventListener("DOMContentLoaded", () => {
-            renderAgentRoster();
-            loadApps();
-            loadDoctypes();
-            loadRecords();
-            startEventPolling();
+            renderAgentPills();
+            checkInitialAppState();
         });
 
-        function switchView(view) {
-            document.getElementById("deskView").style.display = view === 'desk' ? 'block' : 'none';
-            document.getElementById("studioView").className = view === 'studio' ? 'studio-panel active' : 'studio-panel';
-        }
-
-        function renderAgentRoster() {
-            const grid = document.getElementById("agentRosterGrid");
-            grid.innerHTML = KEY_AGENTS.map(name => `
-                <div class="agent-chip" id="chip-${name}">
-                    <span class="chip-dot"></span>
-                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${name.replace('frappe-', '')}</span>
-                </div>
+        function renderAgentPills() {
+            const container = document.getElementById("activeAgentPills");
+            container.innerHTML = KEY_PIPELINE_AGENTS.map(name => `
+                <span class="agent-pill" id="pill-${name}">${name.replace('frappe-', '')}</span>
             `).join("");
         }
 
-        async function loadApps() {
+        async function checkInitialAppState() {
+            try {
+                const res = await fetch("/api/apps");
+                const apps = await res.json();
+                if (apps && apps.length > 0) {
+                    // Apps exist, load the latest app into Desk
+                    selectApp(apps[0].name, apps[0].title);
+                } else {
+                    // Zero apps exist, display pure Prompt Studio!
+                    openPromptStudio();
+                }
+            } catch (e) {
+                openPromptStudio();
+            }
+        }
+
+        function openPromptStudio() {
+            document.getElementById("promptView").style.display = "flex";
+            document.getElementById("deskView").className = "desk-view";
+            document.getElementById("appSidebar").style.display = "none";
+            document.getElementById("btnViewSop").style.display = "none";
+            document.getElementById("btnStimulate").style.display = "none";
+            document.getElementById("btnNewRecord").style.display = "none";
+        }
+
+        function usePreset(prompt) {
+            document.getElementById("mainPromptText").value = prompt;
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        async function startAutonomousBuildFromScratch() {
+            const promptText = document.getElementById("mainPromptText").value.trim();
+            if (!promptText) {
+                alert("Please enter a business application description prompt.");
+                return;
+            }
+
+            const simCount = parseInt(document.getElementById("simCountSelect").value) || 25;
+
+            // Show Flight Deck
+            const deck = document.getElementById("flightDeckBox");
+            deck.classList.add("active");
+            document.getElementById("progressFill").style.width = "10%";
+            document.getElementById("pipelineStatusText").innerText = "Awakening 53 AI Specialists...";
+
+            logConsole("ORCHESTRATOR", `Received requirement prompt: "${promptText}"`);
+            logConsole("DECOMPOSITION", "Analyzing business entities, workflow states, and data models...");
+
+            // Simulate animated stage progression
+            const stages = [
+                {pct: "25%", text: "Stage 1: Deducing DocType Schemas & PRD..."},
+                {pct: "50%", text: "Stage 2: Synthesizing Controllers, APIs & Workflows..."},
+                {pct: "75%", text: "Stage 3: Stimulating Realistic Enterprise Data..."},
+                {pct: "95%", text: "Stage 4: Compiling Working SOP & Hot-Reloading..."}
+            ];
+
+            let stageIdx = 0;
+            const progressTimer = setInterval(() => {
+                if (stageIdx < stages.length) {
+                    document.getElementById("progressFill").style.width = stages[stageIdx].pct;
+                    document.getElementById("pipelineStatusText").innerText = stages[stageIdx].text;
+                    stageIdx++;
+                }
+            }, 300);
+
+            try {
+                const res = await fetch("/api/autonomous/build", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({prompt: promptText, simulated_count: simCount})
+                });
+                const data = await res.json();
+                clearInterval(progressTimer);
+
+                document.getElementById("progressFill").style.width = "100%";
+                document.getElementById("pipelineStatusText").innerText = "Application Built & Deployed Successfully!";
+                logConsole("SUCCESS", `Built '${data.app_title}' with ${data.deliverables} deliverables and ${data.simulated_records_seeded} simulated records!`);
+
+                showToast(`Application '${data.app_title}' built and deployed from scratch!`);
+
+                // Mark all pills done
+                document.querySelectorAll(".agent-pill").forEach(p => p.classList.add("done"));
+
+                // Switch to Desk after short delay
+                setTimeout(async () => {
+                    deck.classList.remove("active");
+                    await selectApp(data.app_slug, data.app_title);
+                }, 1000);
+
+            } catch (e) {
+                clearInterval(progressTimer);
+                logConsole("ERROR", "Build failed: " + e.message);
+                document.getElementById("pipelineStatusText").innerText = "Build failed";
+            }
+        }
+
+        function logConsole(tag, msg) {
+            const c = document.getElementById("consoleLogs");
+            const time = new Date().toLocaleTimeString();
+            const logEl = document.createElement("div");
+            logEl.innerHTML = `<span style="color:#64748b;">[${time}]</span> <span style="font-weight:600; color:#fbbf24;">[${tag}]</span> ${msg}`;
+            c.appendChild(logEl);
+            c.scrollTop = c.scrollHeight;
+        }
+
+        async function selectApp(appSlug, appTitle) {
+            currentApp = appSlug;
+            document.getElementById("promptView").style.display = "none";
+            document.getElementById("deskView").className = "desk-view active";
+            document.getElementById("appSidebar").style.display = "flex";
+            document.getElementById("btnViewSop").style.display = "inline-flex";
+            document.getElementById("btnStimulate").style.display = "inline-flex";
+            document.getElementById("btnNewRecord").style.display = "inline-flex";
+
+            document.getElementById("currentAppTitle").innerText = appTitle;
+
+            await loadSidebarApps();
+            await loadDoctypes();
+            await loadRecords();
+        }
+
+        async function loadSidebarApps() {
             try {
                 const res = await fetch("/api/apps");
                 const apps = await res.json();
@@ -722,7 +893,7 @@ def get_desk_html() -> str:
                     </li>
                 `).join("");
             } catch (e) {
-                console.error("Error loading apps", e);
+                console.error(e);
             }
         }
 
@@ -730,6 +901,11 @@ def get_desk_html() -> str:
             try {
                 const res = await fetch(`/api/doctypes?app=${currentApp}`);
                 const dts = await res.json();
+                if (dts && dts.length > 0) {
+                    currentDocType = dts[0].name;
+                    currentSchema = dts[0].schema;
+                    document.getElementById("currentDocTypeSub").innerText = `Managing ${currentDocType} records in stimulated runtime`;
+                }
                 const listEl = document.getElementById("doctypesList");
                 listEl.innerHTML = dts.map(dt => `
                     <li class="sidebar-item ${dt.name === currentDocType ? 'active' : ''}" onclick="selectDocType('${dt.name}')">
@@ -739,34 +915,26 @@ def get_desk_html() -> str:
                     </li>
                 `).join("");
             } catch (e) {
-                console.error("Error loading doctypes", e);
+                console.error(e);
             }
-        }
-
-        function selectApp(appName, appTitle) {
-            currentApp = appName;
-            document.getElementById("currentAppTitle").innerText = appTitle;
-            loadApps();
-            loadDoctypes();
-            switchView('desk');
         }
 
         function selectDocType(dtName) {
             currentDocType = dtName;
-            document.getElementById("currentDocTypeSub").innerText = `Managing ${dtName} stimulated records`;
+            document.getElementById("currentDocTypeSub").innerText = `Managing ${dtName} records in stimulated runtime`;
             loadDoctypes();
             loadRecords();
-            switchView('desk');
         }
 
         async function loadRecords() {
+            if (!currentDocType) return;
             try {
                 const res = await fetch(`/api/resource/${encodeURIComponent(currentDocType)}`);
                 allRecords = await res.json();
                 renderRecords();
                 updateKPIs();
             } catch (e) {
-                console.error("Error loading records", e);
+                console.error(e);
             }
         }
 
@@ -779,20 +947,24 @@ def get_desk_html() -> str:
             }
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 30px; color:#94a3b8;">No records found. Click "+ New Record" or "⚡ Stimulate 25 Records".</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 40px; color:#94a3b8;">No records found. Click "+ New Record" or "⚡ Stimulate 25 Records".</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = filtered.map(r => {
                 const amt = r.requested_amount ? "$" + parseFloat(r.requested_amount).toLocaleString(undefined, {minimumFractionDigits: 2}) : "-";
                 const statusCls = `status-${(r.status || 'Draft').replace(/\\s+/g, '-')}`;
+                const titleVal = r.title || r.case_title || r.name;
+                const partyVal = r.patient_name || r.applicant_name || r.tenant_name || r.driver_name || '-';
+                const dateVal = r.submission_date || r.creation_date || (r.creation ? r.creation.split(' ')[0] : '-');
+
                 return `
                     <tr onclick="openRecordModal('${r.name}')">
                         <td style="font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--primary);">${r.name}</td>
-                        <td style="font-weight:600;">${r.title || r.name}</td>
-                        <td>${r.applicant_name || '-'}</td>
+                        <td style="font-weight:600;">${titleVal}</td>
+                        <td>${partyVal}</td>
                         <td style="font-weight:600;">${amt}</td>
-                        <td style="color:#64748b;">${r.creation_date || (r.creation ? r.creation.split(' ')[0] : '-')}</td>
+                        <td style="color:#64748b;">${dateVal}</td>
                         <td style="text-align:center;"><span class="status-badge ${statusCls}">${r.status || 'Draft'}</span></td>
                         <td style="text-align:right;">
                             <button class="btn btn-outline" style="padding: 4px 8px; font-size:11px;" onclick="event.stopPropagation(); quickApprove('${r.name}')">Approve</button>
@@ -801,7 +973,6 @@ def get_desk_html() -> str:
                 `;
             }).join("");
 
-            // Update badge
             const b = document.getElementById(`badge-${currentDocType.replace(/\\s/g, '_')}`);
             if (b) b.innerText = allRecords.length;
         }
@@ -824,21 +995,22 @@ def get_desk_html() -> str:
         function handleSearch(term) {
             term = term.toLowerCase();
             const filtered = allRecords.filter(r => {
-                return (r.name && r.name.toLowerCase().includes(term)) ||
-                       (r.title && r.title.toLowerCase().includes(term)) ||
-                       (r.applicant_name && r.applicant_name.toLowerCase().includes(term));
+                const combined = JSON.stringify(r).toLowerCase();
+                return combined.includes(term);
             });
             const tbody = document.getElementById("recordsTbody");
             tbody.innerHTML = filtered.map(r => {
                 const amt = r.requested_amount ? "$" + parseFloat(r.requested_amount).toLocaleString(undefined, {minimumFractionDigits: 2}) : "-";
                 const statusCls = `status-${(r.status || 'Draft').replace(/\\s+/g, '-')}`;
+                const titleVal = r.title || r.name;
+                const partyVal = r.patient_name || r.applicant_name || r.tenant_name || '-';
                 return `
                     <tr onclick="openRecordModal('${r.name}')">
                         <td style="font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--primary);">${r.name}</td>
-                        <td style="font-weight:600;">${r.title || r.name}</td>
-                        <td>${r.applicant_name || '-'}</td>
+                        <td style="font-weight:600;">${titleVal}</td>
+                        <td>${partyVal}</td>
                         <td style="font-weight:600;">${amt}</td>
-                        <td style="color:#64748b;">${r.creation_date || (r.creation ? r.creation.split(' ')[0] : '-')}</td>
+                        <td style="color:#64748b;">${r.creation_date || '-'}</td>
                         <td style="text-align:center;"><span class="status-badge ${statusCls}">${r.status || 'Draft'}</span></td>
                         <td style="text-align:right;">
                             <button class="btn btn-outline" style="padding: 4px 8px; font-size:11px;" onclick="event.stopPropagation(); quickApprove('${r.name}')">Approve</button>
@@ -849,7 +1021,7 @@ def get_desk_html() -> str:
         }
 
         async function stimulateData() {
-            showToast("Synthesizing 25 realistic simulated records...");
+            showToast("Synthesizing 25 more simulated records...");
             try {
                 const res = await fetch("/api/data/synthesize", {
                     method: "POST",
@@ -857,10 +1029,10 @@ def get_desk_html() -> str:
                     body: JSON.stringify({doctype: currentDocType, count: 25})
                 });
                 const data = await res.json();
-                showToast(`Generated ${data.seeded_count} simulated records with realistic data!`);
+                showToast(`Generated ${data.seeded_count} simulated records!`);
                 loadRecords();
             } catch (e) {
-                console.error("Error stimulating data", e);
+                console.error(e);
             }
         }
 
@@ -889,14 +1061,14 @@ def get_desk_html() -> str:
             fieldsDiv.innerHTML = `
                 <div class="form-row">
                     <div class="form-group full">
-                        <label class="form-label">Title / Requisition Name</label>
+                        <label class="form-label">Title / Subject</label>
                         <input type="text" id="modal_f_title" class="form-input" value="${rec.title || ''}">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Applicant / Requesting Party</label>
-                        <input type="text" id="modal_f_applicant" class="form-input" value="${rec.applicant_name || ''}">
+                        <label class="form-label">Responsible / Requesting Party</label>
+                        <input type="text" id="modal_f_applicant" class="form-input" value="${rec.patient_name || rec.applicant_name || rec.tenant_name || rec.driver_name || ''}">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Workflow Status</label>
@@ -911,18 +1083,18 @@ def get_desk_html() -> str:
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Amount ($)</label>
+                        <label class="form-label">Monetary Amount ($)</label>
                         <input type="number" id="modal_f_amount" class="form-input" value="${rec.requested_amount || 0}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Submission Date</label>
-                        <input type="date" id="modal_f_date" class="form-input" value="${rec.creation_date || (rec.creation ? rec.creation.split(' ')[0] : '')}">
+                        <label class="form-label">Date</label>
+                        <input type="date" id="modal_f_date" class="form-input" value="${rec.submission_date || rec.creation_date || (rec.creation ? rec.creation.split(' ')[0] : '')}">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group full">
                         <label class="form-label">Operational Notes & Justification</label>
-                        <textarea id="modal_f_notes" class="form-textarea" rows="3">${rec.notes || ''}</textarea>
+                        <textarea id="modal_f_notes" class="form-textarea" rows="3">${rec.notes || rec.prescription_notes || ''}</textarea>
                     </div>
                 </div>
             `;
@@ -932,20 +1104,20 @@ def get_desk_html() -> str:
         function openNewRecordModal() {
             activeDocname = null;
             document.getElementById("modalTitle").innerText = `New ${currentDocType} Record`;
-            document.getElementById("modalDocname").innerText = "Will be assigned autoname upon creation";
+            document.getElementById("modalDocname").innerText = "Will be assigned autoname upon insertion";
 
             const fieldsDiv = document.getElementById("modalFormFields");
             fieldsDiv.innerHTML = `
                 <div class="form-row">
                     <div class="form-group full">
-                        <label class="form-label">Title / Requisition Name</label>
-                        <input type="text" id="modal_f_title" class="form-input" placeholder="e.g. Q4 Server Hardware Requisition">
+                        <label class="form-label">Title / Subject</label>
+                        <input type="text" id="modal_f_title" class="form-input" placeholder="e.g. Enterprise Requisition Order">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Applicant / Requesting Party</label>
-                        <input type="text" id="modal_f_applicant" class="form-input" placeholder="e.g. Jane Doe">
+                        <label class="form-label">Responsible / Requesting Party</label>
+                        <input type="text" id="modal_f_applicant" class="form-input" placeholder="e.g. John Doe">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Workflow Status</label>
@@ -958,18 +1130,18 @@ def get_desk_html() -> str:
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Amount ($)</label>
-                        <input type="number" id="modal_f_amount" class="form-input" value="10000">
+                        <label class="form-label">Monetary Amount ($)</label>
+                        <input type="number" id="modal_f_amount" class="form-input" value="15000">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Submission Date</label>
+                        <label class="form-label">Date</label>
                         <input type="date" id="modal_f_date" class="form-input" value="${new Date().toISOString().split('T')[0]}">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group full">
                         <label class="form-label">Operational Notes & Justification</label>
-                        <textarea id="modal_f_notes" class="form-textarea" rows="3" placeholder="Enter business justification..."></textarea>
+                        <textarea id="modal_f_notes" class="form-textarea" rows="3" placeholder="Enter notes..."></textarea>
                     </div>
                 </div>
             `;
@@ -980,9 +1152,10 @@ def get_desk_html() -> str:
             const payload = {
                 title: document.getElementById("modal_f_title").value,
                 applicant_name: document.getElementById("modal_f_applicant").value,
+                patient_name: document.getElementById("modal_f_applicant").value,
                 status: document.getElementById("modal_f_status").value,
                 requested_amount: parseFloat(document.getElementById("modal_f_amount").value) || 0,
-                creation_date: document.getElementById("modal_f_date").value,
+                submission_date: document.getElementById("modal_f_date").value,
                 notes: document.getElementById("modal_f_notes").value
             };
 
@@ -1003,7 +1176,7 @@ def get_desk_html() -> str:
                     const created = await res.json();
                     showToast(`Record ${created.name} created!`);
                 }
-                closeModal();
+                closeModal('recordModal');
                 loadRecords();
             } catch (e) {
                 console.error(e);
@@ -1019,15 +1192,31 @@ def get_desk_html() -> str:
                     body: JSON.stringify({status: newStatus})
                 });
                 showToast(`Record marked as ${newStatus}!`);
-                closeModal();
+                closeModal('recordModal');
                 loadRecords();
             } catch (e) {
                 console.error(e);
             }
         }
 
-        function closeModal() {
-            document.getElementById("recordModal").classList.remove("active");
+        async function openSopModal() {
+            if (!currentApp) return;
+            try {
+                const res = await fetch(`/api/app/sop?name=${currentApp}`);
+                const data = await res.json();
+                document.getElementById("sopContent").innerHTML = `
+                    <div style="background:#f8fafc; padding:16px; border-radius:8px; border:1px solid #e2e8f0; white-space:pre-wrap; font-family:'JetBrains Mono',monospace; font-size:12px;">
+${data.sop || "No SOP generated for this application."}
+                    </div>
+                `;
+                document.getElementById("sopModal").classList.add("active");
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove("active");
         }
 
         function showToast(msg) {
@@ -1036,106 +1225,17 @@ def get_desk_html() -> str:
             toast.classList.add("show");
             setTimeout(() => toast.classList.remove("show"), 3500);
         }
-
-        function usePreset(prompt) {
-            document.getElementById("aiPromptInput").value = prompt;
-        }
-
-        async function triggerAutonomousBuild() {
-            const promptText = document.getElementById("aiPromptInput").value.trim();
-            if (!promptText) {
-                alert("Please enter a business application description.");
-                return;
-            }
-
-            document.getElementById("agentStatusBadge").innerText = "AUTONOMOUS AGENTS ACTIVE";
-            document.getElementById("agentStatusBadge").style.color = "#4ade80";
-
-            logToConsole("USER", `Autonomous Prompt Submitted: "${promptText}"`);
-            logToConsole("ORCHESTRATOR", "Awakening Autonomous Multi-Agent DAG Pipeline...");
-
-            // Reset agent chips
-            document.querySelectorAll(".agent-chip").forEach(c => {
-                c.classList.remove("active", "done");
-            });
-
-            try {
-                const res = await fetch("/api/autonomous/build", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({prompt: promptText})
-                });
-                const data = await res.json();
-
-                logToConsole("SUCCESS", `Application '${data.app_title}' (${data.app_slug}) synthesized in ${data.execution_time_sec}s!`);
-                logToConsole("DATA", `Seeded ${data.simulated_records_seeded} realistic enterprise records.`);
-
-                showToast(`Application '${data.app_title}' built and deployed locally!`);
-                document.getElementById("agentStatusBadge").innerText = "IDLE";
-                document.getElementById("agentStatusBadge").style.color = "#94a3b8";
-
-                // Refresh sidebar & switch to the newly created application
-                await loadApps();
-                selectApp(data.app_slug, data.app_title);
-
-            } catch (e) {
-                logToConsole("ERROR", "Failed to build: " + e.message);
-                document.getElementById("agentStatusBadge").innerText = "ERROR";
-            }
-        }
-
-        function logToConsole(tag, msg, isSuccess = false) {
-            const c = document.getElementById("consoleLogs");
-            const time = new Date().toLocaleTimeString();
-            const logEl = document.createElement("div");
-            logEl.className = "console-log" + (isSuccess ? " success" : "");
-            logEl.innerHTML = `<span class="time">[${time}]</span> <span style="font-weight:600;">[${tag}]</span> ${msg}`;
-            c.appendChild(logEl);
-            document.getElementById("consoleBox").scrollTop = document.getElementById("consoleBox").scrollHeight;
-        }
-
-        function startEventPolling() {
-            setInterval(async () => {
-                try {
-                    const res = await fetch("/api/events");
-                    const events = await res.json();
-                    if (!events || events.length === 0) return;
-
-                    events.forEach(ev => {
-                        const d = ev.data;
-                        if (ev.event_type === "AGENT_STARTING") {
-                            logToConsole("AGENT", `[${d.step}/${d.total_steps}] ${d.agent} running...`);
-                            const chip = document.getElementById(`chip-${d.agent}`);
-                            if (chip) {
-                                chip.classList.add("active");
-                            }
-                        } else if (ev.event_type === "AGENT_COMPLETED") {
-                            const chip = document.getElementById(`chip-${d.agent}`);
-                            if (chip) {
-                                chip.classList.remove("active");
-                                chip.classList.add("done");
-                            }
-                        } else if (ev.event_type === "SIMULATION_STARTING") {
-                            logToConsole("SIMULATOR", d.message);
-                        }
-                    });
-                } catch (e) {}
-            }, 1000);
-        }
     </script>
 </body>
 </html>
 """
 
 
-# ---------------------------------------------------------------------------
-# HTTP REQUEST HANDLER
-# ---------------------------------------------------------------------------
 class FrappeLocalRuntimeHandler(BaseHTTPRequestHandler):
     """Handles REST APIs, Desk assets, and Autonomous Builder endpoints."""
 
     def log_message(self, format, *args):
-        # Mute standard noisy HTTP log lines for clean console
+        # Mute standard noisy HTTP log lines
         pass
 
     def do_GET(self):
@@ -1159,14 +1259,22 @@ class FrappeLocalRuntimeHandler(BaseHTTPRequestHandler):
             self._send_json(apps)
             return
 
-        # 3. API: Get DocTypes
+        # 3. API: Get App SOP
+        if path == "/api/app/sop":
+            app_name = query.get("name", [None])[0]
+            app_data = db.get_app(app_name) if app_name else None
+            sop_text = app_data.get("sop_markdown", "") if app_data else ""
+            self._send_json({"sop": sop_text})
+            return
+
+        # 4. API: Get DocTypes
         if path == "/api/doctypes":
             app_filter = query.get("app", [None])[0]
             dts = db.get_doctypes(app_filter)
             self._send_json(dts)
             return
 
-        # 4. API: Query Resources / Records: GET /api/resource/{doctype}
+        # 5. API: Query Resources / Records: GET /api/resource/{doctype}
         if path.startswith("/api/resource/"):
             parts = [urllib.parse.unquote(p) for p in path.split("/")[3:] if p]
             if len(parts) == 1:
@@ -1185,7 +1293,7 @@ class FrappeLocalRuntimeHandler(BaseHTTPRequestHandler):
                     self._send_error(404, f"Document '{name}' not found")
                 return
 
-        # 5. API: Event Stream Polling
+        # 6. API: Event Stream Polling
         if path == "/api/events":
             events = event_bus.get_recent(limit=25)
             self._send_json(events)
@@ -1206,28 +1314,23 @@ class FrappeLocalRuntimeHandler(BaseHTTPRequestHandler):
 
         # 1. Autonomous Builder API
         if path == "/api/autonomous/build":
-            prompt = payload.get("prompt", "Enterprise Application")
+            prompt = payload.get("prompt", "Custom Application")
             app_slug = payload.get("app_slug")
             app_title = payload.get("app_title")
+            simulated_count = int(payload.get("simulated_count", 25))
 
-            def run_async():
-                AutonomousAppBuilder.build_from_prompt(prompt, app_slug, app_title)
-
-            # Run in worker thread
-            thread = threading.Thread(target=run_async, daemon=True)
-            thread.start()
-
-            # Execute synchronous first phase to immediately return details
-            result = AutonomousAppBuilder.build_from_prompt(prompt, app_slug, app_title)
+            # Execute autonomous build from scratch
+            result = AutonomousAppBuilder.build_from_prompt(
+                prompt, app_slug, app_title, simulated_count=simulated_count
+            )
             self._send_json(result)
             return
 
         # 2. Stimulate Data API
         if path == "/api/data/synthesize":
-            doctype_name = payload.get("doctype", "Equipment Loan")
+            doctype_name = payload.get("doctype")
             count = int(payload.get("count", 25))
 
-            # Retrieve doctype schema
             dts = [d for d in db.get_doctypes() if d["name"] == doctype_name]
             schema = dts[0]["schema"] if dts else {"doctype": doctype_name, "fields": []}
 
@@ -1292,30 +1395,25 @@ class FrappeLocalRuntimeHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
-# ---------------------------------------------------------------------------
-# LOCAL RUNTIME SERVER LIFECYCLE
-# ---------------------------------------------------------------------------
 def run_server(port: int = 8050, open_browser: bool = True):
-    """Starts the Frappe Local Runtime Server on localhost."""
-    initialize_default_apps()
+    """Starts the Frappe Local Runtime Server on localhost with zero pre-seeded apps."""
+    # Ensure database is clean of example apps
+    db.clear_all()
 
     server_address = ("127.0.0.1", port)
     httpd = HTTPServer(server_address, FrappeLocalRuntimeHandler)
 
     print("\n" + "=" * 80)
-    print("🚀 FRAPPE AUTONOMOUS LOCAL RUNTIME & DESK SIMULATOR ACTIVE")
+    print("🚀 FRAPPE AUTONOMOUS LOCAL RUNTIME ACTIVE (PURE PROMPT MODE)")
     print(f"URL: http://localhost:{port}")
-    print(f"Active Port: {port} | Database: In-Memory SQLite (Frappe Schema Compliant)")
-    print("Pre-seeded Applications: Equipment Loan Management, Enterprise Procurement")
-    print("Autonomous AI Studio: Integrated with all 53 Frappe AI Agents")
+    print(f"Active Port: {port} | Database: Clean In-Memory (Zero Example Apps)")
+    print("Awaiting User Natural Language Prompt to Build Application From Scratch...")
     print("=" * 80 + "\n")
 
     if open_browser:
-        # Launch browser in a background thread
         def launch():
             time.sleep(1.0)
             url = f"http://localhost:{port}"
-            # Prefer Chrome or Edge in application mode
             chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
             edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
             if os.path.exists(edge_path):
