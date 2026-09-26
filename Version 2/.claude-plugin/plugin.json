@@ -1,0 +1,14 @@
+{
+  "name": "frappe-ecc",
+  "displayName": "Frappe ECC",
+  "version": "3.0.0",
+  "description": "Build, test and review Frappe Framework apps with Claude Code: spec-to-app generator, Frappe-accurate skills, specialist agents, a security scanner and a real bench verification pipeline.",
+  "author": {
+    "name": "Quanticus Tech",
+    "email": "srikrishna.rg@quanticustech.com"
+  },
+  "homepage": "https://github.com/srikrishnaprofessional-gif/Frappe-ECC",
+  "repository": "https://github.com/srikrishnaprofessional-gif/Frappe-ECC",
+  "license": "MIT",
+  "keywords": ["frappe", "erpnext", "bench", "doctype", "python"]
+}

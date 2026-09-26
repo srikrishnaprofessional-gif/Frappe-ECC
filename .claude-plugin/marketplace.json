@@ -1,0 +1,15 @@
+{
+  "name": "frappe-ecc",
+  "description": "Frappe ECC: Claude Code plugin for building Frappe Framework apps",
+  "owner": {
+    "name": "Quanticus Tech",
+    "email": "srikrishna.rg@quanticustech.com"
+  },
+  "plugins": [
+    {
+      "name": "frappe-ecc",
+      "source": "./Version 2",
+      "description": "Spec-to-app generator, Frappe skills, specialist agents, security scanner and bench verification"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "spec_version": 1,
+  "app": {
+    "name": "clinic_management",
+    "title": "Clinic Management",
+    "publisher": "Example Clinic Ltd",
+    "email": "dev@example.com",
+    "description": "Patients, doctors, appointments and prescriptions for a small clinic",
+    "license": "mit"
+  },
+  "modules": [
+    {
+      "name": "Clinic",
+      "doctypes": [
+        {
+          "name": "Clinic Patient",
+          "autoname": "format:PAT-{#####}",
+          "title_field": "patient_name",
+          "search_fields": ["mobile"],
+          "fields": [
+            {"fieldname": "patient_name", "fieldtype": "Data", "reqd": 1, "in_list_view": 1, "bold": 1},
+            {"fieldname": "date_of_birth", "fieldtype": "Date"},
+            {"fieldname": "gender", "fieldtype": "Select", "options": ["", "Female", "Male", "Other"], "in_list_view": 1},
+            {"fieldname": "column_break_1", "fieldtype": "Column Break"},
+            {"fieldname": "mobile", "fieldtype": "Data", "options": "Phone", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "email", "fieldtype": "Data", "options": "Email"},
+            {"fieldname": "section_medical", "label": "Medical", "fieldtype": "Section Break", "collapsible": 1},
+            {"fieldname": "blood_group", "fieldtype": "Select", "options": ["", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]},
+            {"fieldname": "allergies", "fieldtype": "Small Text"}
+          ],
+          "permissions": [
+            {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "print": 1, "email": 1, "share": 1},
+            {"role": "Clinic Receptionist", "read": 1, "write": 1, "create": 1, "report": 1, "print": 1},
+            {"role": "Clinic Doctor", "read": 1, "report": 1, "print": 1}
+          ]
+        },
+        {
+          "name": "Clinic Doctor",
+          "autoname": "field:doctor_name",
+          "fields": [
+            {"fieldname": "doctor_name", "fieldtype": "Data", "reqd": 1, "unique": 1, "in_list_view": 1},
+            {"fieldname": "specialisation", "fieldtype": "Data", "in_list_view": 1, "in_standard_filter": 1},
+            {"fieldname": "user", "fieldtype": "Link", "options": "User", "description": "Login used by this doctor"},
+            {"fieldname": "consultation_fee", "fieldtype": "Currency", "non_negative": 1},
+            {"fieldname": "is_active", "fieldtype": "Check", "default": 1, "in_list_view": 1}
+          ],
+          "permissions": [
+            {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "print": 1, "email": 1, "share": 1},
+            {"role": "Clinic Receptionist", "read": 1},
+            {"role": "Clinic Doctor", "read": 1}
+          ]
+        },
+        {
+          "name": "Clinic Appointment",
+          "submittable": true,
+          "autoname": "format:APT-{YYYY}-{#####}",
+          "title_field": "patient_name",
+          "fields": [
+            {"fieldname": "patient", "fieldtype": "Link", "options": "Clinic Patient", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+            {"fieldname": "patient_name", "fieldtype": "Data", "fetch_from": "patient.patient_name", "read_only": 1},
+            {"fieldname": "doctor", "fieldtype": "Link", "options": "Clinic Doctor", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+            {"fieldname": "column_break_1", "fieldtype": "Column Break"},
+            {"fieldname": "appointment_date", "fieldtype": "Date", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "appointment_time", "fieldtype": "Time", "reqd": 1},
+            {"fieldname": "status", "fieldtype": "Select", "options": ["Scheduled", "Completed", "No Show"], "default": "Scheduled", "allow_on_submit": 1, "in_standard_filter": 1},
+            {"fieldname": "section_notes", "label": "Consultation", "fieldtype": "Section Break"},
+            {"fieldname": "symptoms", "fieldtype": "Small Text"},
+            {"fieldname": "diagnosis", "fieldtype": "Small Text"},
+            {"fieldname": "prescriptions", "label": "Prescriptions", "fieldtype": "Table", "options": "Clinic Prescription Item"},
+            {"fieldname": "fee", "fieldtype": "Currency", "fetch_from": "doctor.consultation_fee", "read_only": 1}
+          ],
+          "permissions": [
+            {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "submit": 1, "cancel": 1, "amend": 1, "report": 1, "export": 1, "print": 1, "email": 1, "share": 1},
+            {"role": "Clinic Receptionist", "read": 1, "write": 1, "create": 1, "report": 1, "print": 1},
+            {"role": "Clinic Doctor", "read": 1, "write": 1, "submit": 1, "report": 1, "print": 1}
+          ]
+        },
+        {
+          "name": "Clinic Prescription Item",
+          "child_table": true,
+          "fields": [
+            {"fieldname": "medicine", "fieldtype": "Data", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "dosage", "fieldtype": "Data", "in_list_view": 1},
+            {"fieldname": "days", "fieldtype": "Int", "in_list_view": 1, "non_negative": 1},
+            {"fieldname": "instructions", "fieldtype": "Small Text"}
+          ]
+        },
+        {
+          "name": "Clinic Settings",
+          "single": true,
+          "fields": [
+            {"fieldname": "clinic_name", "fieldtype": "Data", "reqd": 1},
+            {"fieldname": "default_slot_minutes", "fieldtype": "Int", "default": "15"},
+            {"fieldname": "send_reminders", "fieldtype": "Check"}
+          ],
+          "permissions": [
+            {"role": "System Manager", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1, "share": 1}
+          ]
+        }
+      ]
+    }
+  ]
+}

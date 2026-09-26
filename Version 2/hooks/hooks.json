@@ -1,0 +1,17 @@
+{
+  "description": "Run Frappe Shield on Python and JavaScript files after Claude edits them",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/bin/frappe-ecc hook-check",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

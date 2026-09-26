@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+defaults:
+  run:
+    working-directory: Version 2
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Unit tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.12", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s tests -t . -v
+      - name: Shield scans its own code
+        run: bin/frappe-ecc shield frappe_ecc
+
+  plugin:
+    name: Claude Code plugin validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g @anthropic-ai/claude-code
+      - working-directory: .
+        run: claude plugin validate --strict .
+      - run: |
+          claude plugin validate --strict .claude-plugin/plugin.json
+          for d in skills agents commands; do claude plugin validate --strict "$d"; done
+
+  e2e:
+    name: Generated app on Frappe ${{ matrix.frappe-branch }}
+    runs-on: ubuntu-latest
+    needs: unit
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - frappe-branch: version-15
+            python: "3.11"
+            node: 18
+          - frappe-branch: version-16
+            python: "3.14"
+            node: 24
+    services:
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="mariadb-admin ping" --health-interval=5s --health-timeout=2s --health-retries=5
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install bench
+        run: |
+          sudo apt-get update && sudo apt-get install -y mariadb-client
+          pip install frappe-bench
+      - name: Init bench
+        run: bench init --skip-redis-config-generation --skip-assets --frappe-branch ${{ matrix.frappe-branch }} --python "$(which python)" ~/frappe-bench
+      - name: Create site
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench set-config -g redis_cache redis://localhost:6379
+          bench set-config -g redis_queue redis://localhost:6379
+          bench set-config -g redis_socketio redis://localhost:6379
+          bench new-site --db-root-password root --admin-password admin ecc.test
+      - name: Rules match this Frappe version
+        run: ~/frappe-bench/env/bin/python -m unittest tests.test_spec.TestRulesMatchInstalledFrappe -v
+      - name: Generate example app
+        run: bin/frappe-ecc new examples/clinic_management.json --dest ~/generated
+      - name: Verify on a real site
+        run: bin/frappe-ecc verify ~/generated/clinic_management --bench ~/frappe-bench --site ecc.test --report verify-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verify-report-${{ matrix.frappe-branch }}
+          path: Version 2/verify-report.json

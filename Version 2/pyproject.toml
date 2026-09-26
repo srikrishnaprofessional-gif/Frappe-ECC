@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "frappe-ecc"
+dynamic = ["version"]
+description = "Spec-to-app generator, security scanner and bench verification for Frappe Framework apps, plus a Claude Code plugin"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Quanticus Tech", email = "srikrishna.rg@quanticustech.com"}]
+dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Framework :: Frappe",
+]
+
+[project.optional-dependencies]
+yaml = ["pyyaml>=6"]
+
+[project.urls]
+Homepage = "https://github.com/srikrishnaprofessional-gif/Frappe-ECC"
+
+[project.scripts]
+frappe-ecc = "frappe_ecc.cli:main"
+
+[tool.setuptools]
+packages = ["frappe_ecc"]
+
+[tool.setuptools.dynamic]
+version = {attr = "frappe_ecc.__version__"}
+
+[tool.setuptools.package-data]
+frappe_ecc = ["data/*.json"]
