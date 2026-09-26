@@ -247,26 +247,89 @@ def get_desk_html() -> str:
             transform: translateY(-1px);
         }
 
-        .presets-title { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
-        .preset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
-        .preset-card {
+        .btn-claude {
+            background: #fdf4ff;
+            color: #86198f;
+            border: 1px solid #f0abfc;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.15s ease;
+        }
+        .btn-claude:hover {
+            background: #fae8ff;
+            border-color: #d946ef;
+        }
+        .claude-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #94a3b8;
+            display: inline-block;
+        }
+        .claude-dot.active {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+            animation: pulse 2s infinite;
+        }
+        .claude-dot.error {
+            background: #ef4444;
+        }
+
+        /* 53 Specialists & Lifecycle Capabilities */
+        .lifecycle-banner {
             background: white;
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: all 0.15s ease;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 16px;
         }
-        .preset-card:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-            transform: translateY(-1px);
+        .lifecycle-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
-        .preset-header { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: var(--text-main); }
-        .preset-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; }
+        .lifecycle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .lifecycle-step {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .step-num {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .step-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .step-desc {
+            font-size: 11.5px;
+            color: #64748b;
+            line-height: 1.45;
+        }
 
         /* Real-Time Flight Deck Animation (When building) */
         .flight-deck-modal {
@@ -504,8 +567,12 @@ def get_desk_html() -> str:
         </div>
 
         <div class="nav-actions" id="topNavActions">
+            <button class="btn btn-claude" id="btnClaudeStatus" onclick="openClaudeModal()">
+                <span class="claude-dot" id="claudeDot"></span>
+                <span id="claudeStatusText">Connect Claude AI</span>
+            </button>
             <button class="btn btn-studio" onclick="openPromptStudio()">
-                ⚡ Build Another App
+                ⚡ Prompt Studio
             </button>
             <button class="btn btn-outline" id="btnViewSop" style="display:none;" onclick="openSopModal()">
                 📘 Working SOP
@@ -587,25 +654,49 @@ def get_desk_html() -> str:
                     </div>
                 </div>
 
-                <!-- Quick Presets -->
-                <div>
-                    <div class="presets-title">Or Choose an Enterprise Domain to Build From Scratch:</div>
-                    <div class="preset-grid">
-                        <div class="preset-card" onclick="usePreset('Build an autonomous Healthcare Clinic and Patient Prescription EHR with appointment scheduling, physician notes, and consultation billing')">
-                            <div class="preset-header"><span>🏥</span> Healthcare Clinic & Patient EHR</div>
-                            <div class="preset-desc">Appointments, patient medical history, physician diagnosis, prescriptions, and invoice billing.</div>
+                <!-- 53 Autonomous Specialists & Lifecycle Capabilities -->
+                <div class="lifecycle-banner">
+                    <div class="lifecycle-title">🚀 53 Specialized AI Agents — Complete End-to-End Software Lifecycle (Idea → Build → Test → Deploy)</div>
+                    <div class="lifecycle-grid">
+                        <div class="lifecycle-step">
+                            <div class="step-num">Pillar 1</div>
+                            <div class="step-name">Idea & Ingestion</div>
+                            <div class="step-desc">Deconstructs any natural language requirement into entity models, user stories, and acceptance criteria.</div>
                         </div>
-                        <div class="preset-card" onclick="usePreset('Build an autonomous Fleet Logistics & Vehicle Telematics Tracker with trip logs, fuel consumption, driver records, and maintenance scheduling')">
-                            <div class="preset-header"><span>🚚</span> Fleet Logistics & Telematics</div>
-                            <div class="preset-desc">Vehicle assets, route trip logs, cargo weight, driver assignments, fuel costs, and service alerts.</div>
+                        <div class="lifecycle-step">
+                            <div class="step-num">Pillar 2</div>
+                            <div class="step-name">Architecture & HLD/LLD</div>
+                            <div class="step-desc">Synthesizes system architecture, entity relationships, DocTypes, child tables, and Frappe schemas.</div>
                         </div>
-                        <div class="preset-card" onclick="usePreset('Build an autonomous Real Estate Property Leasing & Tenant Rent Management portal with lease agreements and payments')">
-                            <div class="preset-header"><span>🏢</span> Real Estate Leasing & Tenants</div>
-                            <div class="preset-desc">Commercial property units, tenant profiles, lease covenants, monthly rent schedules, and deposits.</div>
+                        <div class="lifecycle-step">
+                            <div class="step-num">Pillar 3</div>
+                            <div class="step-name">BPMN Workflows</div>
+                            <div class="step-desc">Generates state machines (Draft → Under Review → Approved → Completed), triggers, and notifications.</div>
                         </div>
-                        <div class="preset-card" onclick="usePreset('Build an autonomous Equipment Loan & Heavy Machinery Requisition system with return inspections and asset values')">
-                            <div class="preset-header"><span>🏗️</span> Heavy Machinery Loan Tracker</div>
-                            <div class="preset-desc">Asset requisitions, department loan approvals, return dates, inspection notes, and valuation.</div>
+                        <div class="lifecycle-step">
+                            <div class="step-num">Pillar 4</div>
+                            <div class="step-name">Full-Stack Development</div>
+                            <div class="step-desc">Writes complete Python controllers, hooks.py, client scripts, REST APIs, and Frappe Desk views.</div>
+                        </div>
+                        <div class="lifecycle-step">
+                            <div class="step-num">Pillar 5</div>
+                            <div class="step-name">BI & Analytics</div>
+                            <div class="step-desc">Compiles real-time metrics, KPI cards, financial aggregations, and script reports.</div>
+                        </div>
+                        <div class="lifecycle-step">
+                            <div class="step-num">Pillar 6</div>
+                            <div class="step-name">Data Stimulation</div>
+                            <div class="step-desc">Injects realistic enterprise simulated records aligned with exact synthesized fields for instant execution.</div>
+                        </div>
+                        <div class="lifecycle-step">
+                            <div class="step-num">Pillar 7</div>
+                            <div class="step-name">TDD & QA Automation</div>
+                            <div class="step-desc">Authors FrappeTestCase test suites verifying schemas, validation hooks, and permission boundaries.</div>
+                        </div>
+                        <div class="lifecycle-step">
+                            <div class="step-num">Pillar 8</div>
+                            <div class="step-name">SOP & Git Deployment</div>
+                            <div class="step-desc">Produces standard operating procedures, role documentation, git versioning, and production manifests.</div>
                         </div>
                     </div>
                 </div>
@@ -723,6 +814,44 @@ def get_desk_html() -> str:
         </div>
     </div>
 
+    <!-- Claude Connection Modal -->
+    <div class="modal-overlay" id="claudeModal">
+        <div class="modal-card" style="width: 580px;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 700; color: #1e1b4b; display:flex; align-items:center; gap:8px;">
+                        <span>🤖</span> Connect Claude AI (Anthropic)
+                    </h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">Powers all 53 Frappe ECC agents with 100% precision for autonomous app generation</span>
+                </div>
+                <button class="btn btn-outline" style="padding: 4px 8px;" onclick="closeModal('claudeModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group full">
+                    <label class="form-label">Anthropic Claude API Key</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="password" id="claudeKeyInput" class="form-input" style="flex:1; font-family:'JetBrains Mono', monospace;" placeholder="sk-ant-api03-..." />
+                        <button class="btn btn-outline" type="button" onclick="toggleKeyVisibility()">👁️</button>
+                    </div>
+                    <span style="font-size:11px; color:#64748b; margin-top:4px;">Key is saved locally to <code>~/.claude_key</code> and <code>.env</code>. It is never logged or exposed.</span>
+                </div>
+                <div class="form-group full">
+                    <label class="form-label">Claude Model</label>
+                    <select id="claudeModelSelect" class="form-select">
+                        <option value="claude-3-7-sonnet-20250219" selected>Claude 3.7 Sonnet (Most Capable & Recommended)</option>
+                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                        <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku (Ultra-Fast)</option>
+                    </select>
+                </div>
+                <div id="claudeConnectionFeedback" style="display:none; padding:12px; border-radius:8px; font-size:12px; font-family:'JetBrains Mono', monospace;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('claudeModal')">Cancel</button>
+                <button class="btn btn-primary" id="btnSaveClaude" onclick="saveClaudeConnection()">Test & Connect Claude</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="toast" id="toastMessage">Application initialized</div>
 
@@ -750,44 +879,100 @@ def get_desk_html() -> str:
 
         window.addEventListener("DOMContentLoaded", () => {
             renderAgentPills();
+            checkClaudeStatus();
             checkInitialAppState();
         });
 
-        function renderAgentPills() {
-            const container = document.getElementById("activeAgentPills");
-            container.innerHTML = KEY_PIPELINE_AGENTS.map(name => `
-                <span class="agent-pill" id="pill-${name}">${name.replace('frappe-', '')}</span>
-            `).join("");
-        }
-
-        async function checkInitialAppState() {
+        async function checkClaudeStatus() {
             try {
-                const res = await fetch("/api/apps");
-                const apps = await res.json();
-                if (apps && apps.length > 0) {
-                    // Apps exist, load the latest app into Desk
-                    selectApp(apps[0].name, apps[0].title);
+                const res = await fetch("/api/claude/status");
+                const data = await res.json();
+                const dot = document.getElementById("claudeDot");
+                const txt = document.getElementById("claudeStatusText");
+                const btn = document.getElementById("btnClaudeStatus");
+                if (data.connected) {
+                    dot.className = "claude-dot active";
+                    txt.innerText = `Claude Connected (${data.model ? data.model.split('-')[1] : 'Active'})`;
+                    btn.style.background = "#ecfdf5";
+                    btn.style.borderColor = "#a7f3d0";
+                    btn.style.color = "#047857";
+                    if (data.masked_key) {
+                        document.getElementById("claudeKeyInput").value = data.masked_key;
+                    }
                 } else {
-                    // Zero apps exist, display pure Prompt Studio!
-                    openPromptStudio();
+                    dot.className = "claude-dot";
+                    txt.innerText = "Connect Claude AI";
+                    btn.style.background = "#fdf4ff";
+                    btn.style.borderColor = "#f0abfc";
+                    btn.style.color = "#86198f";
                 }
             } catch (e) {
-                openPromptStudio();
+                console.error("Claude status check error", e);
             }
         }
 
-        function openPromptStudio() {
-            document.getElementById("promptView").style.display = "flex";
-            document.getElementById("deskView").className = "desk-view";
-            document.getElementById("appSidebar").style.display = "none";
-            document.getElementById("btnViewSop").style.display = "none";
-            document.getElementById("btnStimulate").style.display = "none";
-            document.getElementById("btnNewRecord").style.display = "none";
+        function openClaudeModal() {
+            document.getElementById("claudeModal").classList.add("active");
+            document.getElementById("claudeConnectionFeedback").style.display = "none";
         }
 
-        function usePreset(prompt) {
-            document.getElementById("mainPromptText").value = prompt;
-            window.scrollTo({top: 0, behavior: 'smooth'});
+        function toggleKeyVisibility() {
+            const inp = document.getElementById("claudeKeyInput");
+            inp.type = inp.type === "password" ? "text" : "password";
+        }
+
+        async function saveClaudeConnection() {
+            const key = document.getElementById("claudeKeyInput").value.trim();
+            const model = document.getElementById("claudeModelSelect").value;
+            const fb = document.getElementById("claudeConnectionFeedback");
+            const btn = document.getElementById("btnSaveClaude");
+
+            if (!key) {
+                fb.style.display = "block";
+                fb.style.background = "#fee2e2";
+                fb.style.color = "#991b1b";
+                fb.innerText = "Please enter your Anthropic Claude API key (sk-ant-...).";
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Verifying with Anthropic API...";
+            fb.style.display = "block";
+            fb.style.background = "#f1f5f9";
+            fb.style.color = "#334155";
+            fb.innerText = "Testing connectivity to Claude API...";
+
+            try {
+                const res = await fetch("/api/claude/connect", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({api_key: key, model: model})
+                });
+                const data = await res.json();
+                btn.disabled = false;
+                btn.innerText = "Test & Connect Claude";
+
+                if (data.verification && data.verification.connected) {
+                    fb.style.background = "#ecfdf5";
+                    fb.style.color = "#065f46";
+                    fb.innerText = `Connected successfully! Model: ${data.verification.model}. All 53 agents now operating with Claude.`;
+                    showToast("Claude Connected Successfully!");
+                    checkClaudeStatus();
+                    setTimeout(() => closeModal('claudeModal'), 1800);
+                } else {
+                    const msg = (data.verification && data.verification.message) || "Could not verify key with Anthropic API.";
+                    fb.style.background = "#fee2e2";
+                    fb.style.color = "#991b1b";
+                    fb.innerText = msg + " (Key was stored locally for agent execution).";
+                    checkClaudeStatus();
+                }
+            } catch (e) {
+                btn.disabled = false;
+                btn.innerText = "Test & Connect Claude";
+                fb.style.background = "#fee2e2";
+                fb.style.color = "#991b1b";
+                fb.innerText = "Network error: " + e.message;
+            }
         }
 
         async function startAutonomousBuildFromScratch() {
@@ -952,11 +1137,14 @@ def get_desk_html() -> str:
             }
 
             tbody.innerHTML = filtered.map(r => {
-                const amt = r.requested_amount ? "$" + parseFloat(r.requested_amount).toLocaleString(undefined, {minimumFractionDigits: 2}) : "-";
-                const statusCls = `status-${(r.status || 'Draft').replace(/\\s+/g, '-')}`;
-                const titleVal = r.title || r.case_title || r.name;
-                const partyVal = r.patient_name || r.applicant_name || r.tenant_name || r.driver_name || '-';
+                const titleVal = r.title || r.case_title || r.subject || r.name;
+                const partyKeys = Object.keys(r).filter(k => k.endsWith('_name') || k.endsWith('_party') || k.endsWith('_assigned') || k.endsWith('_officer') || k.endsWith('_driver') || k.endsWith('_tenant') || k.endsWith('_patient'));
+                const partyVal = partyKeys.length > 0 ? r[partyKeys[0]] : (r.applicant_name || '-');
+                const amtKeys = Object.keys(r).filter(k => k.includes('amount') || k.includes('cost') || k.includes('fee') || k.includes('rent') || k.includes('price') || k.includes('total') || k.includes('valuation'));
+                const rawAmt = amtKeys.length > 0 ? r[amtKeys[0]] : r.requested_amount;
+                const amt = (rawAmt !== undefined && rawAmt !== null && rawAmt !== "") ? "$" + parseFloat(rawAmt).toLocaleString(undefined, {minimumFractionDigits: 2}) : "-";
                 const dateVal = r.submission_date || r.creation_date || (r.creation ? r.creation.split(' ')[0] : '-');
+                const statusCls = `status-${(r.status || 'Draft').replace(/\\s+/g, '-')}`;
 
                 return `
                     <tr onclick="openRecordModal('${r.name}')">
@@ -979,7 +1167,11 @@ def get_desk_html() -> str:
 
         function updateKPIs() {
             document.getElementById("kpiTotal").innerText = allRecords.length;
-            const totalVol = allRecords.reduce((acc, r) => acc + (parseFloat(r.requested_amount) || 0), 0);
+            const totalVol = allRecords.reduce((acc, r) => {
+                const amtKeys = Object.keys(r).filter(k => k.includes('amount') || k.includes('cost') || k.includes('fee') || k.includes('rent') || k.includes('price') || k.includes('total') || k.includes('valuation'));
+                const rawAmt = amtKeys.length > 0 ? r[amtKeys[0]] : r.requested_amount;
+                return acc + (parseFloat(rawAmt) || 0);
+            }, 0);
             document.getElementById("kpiVolume").innerText = "$" + totalVol.toLocaleString(undefined, {maximumFractionDigits: 0});
             const reviewCount = allRecords.filter(r => (r.status || '').toLowerCase() === 'under review').length;
             document.getElementById("kpiReview").innerText = reviewCount;
@@ -1000,17 +1192,22 @@ def get_desk_html() -> str:
             });
             const tbody = document.getElementById("recordsTbody");
             tbody.innerHTML = filtered.map(r => {
-                const amt = r.requested_amount ? "$" + parseFloat(r.requested_amount).toLocaleString(undefined, {minimumFractionDigits: 2}) : "-";
+                const titleVal = r.title || r.case_title || r.name;
+                const partyKeys = Object.keys(r).filter(k => k.endsWith('_name') || k.endsWith('_party') || k.endsWith('_assigned') || k.endsWith('_officer'));
+                const partyVal = partyKeys.length > 0 ? r[partyKeys[0]] : (r.applicant_name || '-');
+                const amtKeys = Object.keys(r).filter(k => k.includes('amount') || k.includes('cost') || k.includes('fee') || k.includes('rent') || k.includes('price'));
+                const rawAmt = amtKeys.length > 0 ? r[amtKeys[0]] : r.requested_amount;
+                const amt = (rawAmt !== undefined && rawAmt !== null && rawAmt !== "") ? "$" + parseFloat(rawAmt).toLocaleString(undefined, {minimumFractionDigits: 2}) : "-";
+                const dateVal = r.submission_date || r.creation_date || (r.creation ? r.creation.split(' ')[0] : '-');
                 const statusCls = `status-${(r.status || 'Draft').replace(/\\s+/g, '-')}`;
-                const titleVal = r.title || r.name;
-                const partyVal = r.patient_name || r.applicant_name || r.tenant_name || '-';
+
                 return `
                     <tr onclick="openRecordModal('${r.name}')">
                         <td style="font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--primary);">${r.name}</td>
                         <td style="font-weight:600;">${titleVal}</td>
                         <td>${partyVal}</td>
                         <td style="font-weight:600;">${amt}</td>
-                        <td style="color:#64748b;">${r.creation_date || '-'}</td>
+                        <td style="color:#64748b;">${dateVal}</td>
                         <td style="text-align:center;"><span class="status-badge ${statusCls}">${r.status || 'Draft'}</span></td>
                         <td style="text-align:right;">
                             <button class="btn btn-outline" style="padding: 4px 8px; font-size:11px;" onclick="event.stopPropagation(); quickApprove('${r.name}')">Approve</button>
@@ -1299,6 +1496,13 @@ class FrappeLocalRuntimeHandler(BaseHTTPRequestHandler):
             self._send_json(events)
             return
 
+        # 7. API: Claude Connection Status
+        if path == "/api/claude/status":
+            from .engine import LLMEngine
+            status = LLMEngine.verify_connection()
+            self._send_json(status)
+            return
+
         self._send_error(404, "Endpoint not found")
 
     def do_POST(self):
@@ -1311,6 +1515,19 @@ class FrappeLocalRuntimeHandler(BaseHTTPRequestHandler):
             payload = json.loads(body)
         except Exception:
             payload = {}
+
+        # Claude Connection API
+        if path == "/api/claude/connect":
+            from .engine import LLMEngine
+            api_key = payload.get("api_key", "").strip()
+            model = payload.get("model", "claude-3-7-sonnet-20250219").strip()
+            if not api_key:
+                self._send_error(400, "API key is required")
+                return
+            success = LLMEngine.set_claude_key(api_key, model)
+            verification = LLMEngine.verify_connection()
+            self._send_json({"success": success, "verification": verification})
+            return
 
         # 1. Autonomous Builder API
         if path == "/api/autonomous/build":
